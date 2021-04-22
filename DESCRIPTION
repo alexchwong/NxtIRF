@@ -51,8 +51,9 @@ Imports:
 	stringr,
 	SummarizedExperiment,
 	S4Vectors,
-	XML
-LinkingTo: Rcpp, zlibbioc, RcppProgress
+	XML,
+	zlibbioc
+LinkingTo: Rcpp, RcppProgress
 Suggests: 
     knitr, rmarkdown, pheatmap,
     DESeq2, limma, Rsubread, testthat (>= 3.0.0)

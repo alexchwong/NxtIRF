@@ -1,4 +1,5 @@
 #' @useDynLib NxtIRF, .registration = TRUE 
+#' @import zlibbioc
 #' @importFrom magrittr %>%
 #' @import data.table
 #' @import shiny
