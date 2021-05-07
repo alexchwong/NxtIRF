@@ -211,6 +211,53 @@ IRFinder <- function(
     )
 }
 
+IRFinder_debug <- function(
+        bamfiles = "./Unsorted.bam", 
+        sample_names = "sample1",
+        reference_path = "./Reference",
+        output_path = "./IRFinder_Output",
+        n_threads = 1,
+        overwrite = FALSE,
+        run_featureCounts = FALSE,
+        verbose = FALSE
+        ) {
+    if(length(bamfiles) != length(sample_names)) {
+        .log(paste("In IRFinder,",
+            "Number of BAM files and sample names must be the same"))
+    }
+    if(!all(file.exists(bamfiles))) {
+        .log(paste("In IRFinder,",
+            "some BAMs in bamfiles do not exist"))
+    }
+    if(!dir.exists(dirname(output_path))) {
+        .log(paste("In IRFinder,",
+            dirname(output_path), " - path does not exist"))
+    }
+    if(!dir.exists(output_path)) dir.create(output_path)
+
+    s_output = file.path(normalizePath(output_path), sample_names)
+
+    if(!overwrite) {
+        already_exist = (
+            file.exists(paste(s_output, "txt.gz")) &
+            file.exists(paste(s_output, ".cov"))
+        )
+    } else {
+        already_exist = rep(FALSE, length(bamfiles))
+    }
+
+    .run_IRFinder_debug(
+        reference_path = reference_path,
+        bamfiles = bamfiles[!already_exist],
+        output_files = s_output[!already_exist],
+        max_threads = n_threads,
+        run_featureCounts = run_featureCounts,
+        overwrite_IRFinder_output = overwrite,
+        verbose = verbose
+    )
+}
+
+
 #' Processes data from IRFinder output
 #'
 #' CollateData unifies a list of IRFinder output files belonging to an 

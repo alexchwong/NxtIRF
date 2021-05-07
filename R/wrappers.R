@@ -65,6 +65,66 @@
     }
 }
 
+.run_IRFinder_debug = function(
+        reference_path = "./Reference", 
+        bamfiles = "Unsorted.bam", 
+        output_files = "./Sample",
+        max_threads = max(parallel::detectCores() - 2, 1),
+        Use_OpenMP = TRUE,
+        run_featureCounts = FALSE,
+        overwrite_IRFinder_output = FALSE,
+        verbose = TRUE
+    ) {
+    .validate_reference(reference_path)
+    s_bam = normalizePath(bamfiles)
+    s_ref = normalizePath(reference_path)
+    
+    .irfinder_validate_args(s_bam, s_ref, max_threads, output_files)
+    
+    ref_file = normalizePath(file.path(s_ref, "IRFinder.ref.gz"))
+
+    message("Running IRFinder ", appendLF = FALSE)
+    n_threads = floor(max_threads)
+    
+    n_rounds = ceiling(length(s_bam) / floor(max_threads))
+    n_threads = ceiling(length(s_bam) / n_rounds)
+
+    BPPARAM = BiocParallel::bpparam()
+    if(Sys.info()["sysname"] == "Windows") {
+        BPPARAM_mod = BiocParallel::SnowParam(n_threads)
+        message(paste("Using SnowParam", BPPARAM_mod$workers, "threads"))
+    } else {
+        BPPARAM_mod = BiocParallel::MulticoreParam(n_threads)
+        message(paste("Using MulticoreParam", BPPARAM_mod$workers, 
+            "threads"))
+    }
+
+    row_starts = seq(1, by = n_threads, length.out = n_rounds)
+    for(i in seq_len(n_rounds)) {
+        selected_rows_subset = seq(row_starts[i], 
+            min(length(s_bam), row_starts[i] + n_threads - 1)
+        )
+        BiocParallel::bplapply(selected_rows_subset,
+            function(i, s_bam, reference_file, output_files, verbose, overwrite) {
+                .irfinder_run_single_debug(s_bam[i], reference_file, output_files[i], 
+                    verbose, overwrite)
+            }, 
+            s_bam = s_bam,
+            reference_file = ref_file,
+            output_files = output_files,
+            verbose = verbose,
+            overwrite = overwrite_IRFinder_output,
+            BPPARAM = BPPARAM_mod
+        )
+    }
+    # }
+    if(run_featureCounts == TRUE) {
+        .irfinder_run_featureCounts(reference_path, output_files, 
+            s_bam, n_threads)
+    }
+}
+
+
 .irfinder_run_single <- function(bam, ref, out, verbose, overwrite) {
     file_gz = paste0(out, ".txt.gz")
     file_cov = paste0(out, ".cov")
@@ -72,6 +132,30 @@
     if(overwrite ||
         !(file.exists(file_gz) | file.exists(file_cov))) {
         IRF_main(bam, ref, out, verbose)
+        # Check IRFinder returns all files successfully
+
+        if(!file.exists(file_gz)) {
+            .log(paste(
+                "IRFinder failed to produce", file_gz))
+        } else if(!file.exists(file_cov)) {
+            .log(paste(
+                "IRFinder failed to produce", file_cov))
+        } else {
+            message(paste("IRFinder processed", bam_short))
+        }
+    } else {
+        message(paste("IRFinder output for", 
+            bam_short, "already exists, skipping..."))
+    }
+}
+
+.irfinder_run_single_debug <- function(bam, ref, out, verbose, overwrite) {
+    file_gz = paste0(out, ".txt.gz")
+    file_cov = paste0(out, ".cov")
+    bam_short = file.path(basename(dirname(bam)), basename(bam))
+    if(overwrite ||
+        !(file.exists(file_gz) | file.exists(file_cov))) {
+        IRF_main_debug(bam, ref, out, verbose)
         # Check IRFinder returns all files successfully
 
         if(!file.exists(file_gz)) {

@@ -33,6 +33,10 @@ IRF_main_multithreaded <- function(reference_file, bam_files, output_files, max_
     .Call(`_NxtIRF_IRF_main_multithreaded`, reference_file, bam_files, output_files, max_threads)
 }
 
+IRF_main_debug <- function(bam_file, reference_file, output_file, verbose = TRUE) {
+    .Call(`_NxtIRF_IRF_main_debug`, bam_file, reference_file, output_file, verbose)
+}
+
 IRF_GenerateMappabilityReads <- function(genome_file, out_fa, read_len, read_stride, error_pos) {
     .Call(`_NxtIRF_IRF_GenerateMappabilityReads`, genome_file, out_fa, read_len, read_stride, error_pos)
 }

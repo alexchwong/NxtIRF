@@ -731,3 +731,197 @@ int main(int argc, char * argv[]) {
 }
 	
 #endif
+
+
+// Debug
+
+#ifndef GALAXY
+// [[Rcpp::export]]
+int IRF_main_debug(std::string bam_file, std::string reference_file, std::string output_file, bool verbose = true){
+  
+  std::string s_output_txt = output_file + ".txt.gz";
+  std::string s_output_cov = output_file + ".cov";
+#else
+int IRF_main_debug(std::string bam_file, std::string reference_file, std::string s_output_txt, std::string s_output_cov){	
+	bool verbose = true;
+#endif
+
+  std::string s_bam = bam_file;
+  std::string s_ref = reference_file;
+		
+	if(verbose) {
+		Rcout << "Running IRFinder on " << s_bam << "\nReference: " << reference_file << "\n";
+		Rcout << "Output file: " << s_output_txt << "\t" << s_output_cov << "\n\n";
+		Rcout << "Reading reference file\n";
+	}
+    
+	GZReader gz_in;
+	int ret = gz_in.LoadGZ(reference_file, true);
+	if(ret != 0) return(-1);
+	
+	std::string myLine;
+	std::string myBuffer;
+	
+	getline(gz_in.iss, myLine, '#');    // discard first >
+	getline(gz_in.iss, myLine, '\n');   // ignore file names for now	
+	getline(gz_in.iss, myBuffer, '#');  // this is the data block for ref-cover.bed
+
+  std::istringstream inCoverageBlocks;
+  inCoverageBlocks.str(myBuffer);
+  // CoverageBlocksIRFinder oCoverageBlocks;
+  // oCoverageBlocks.loadRef(inCoverageBlocks);
+
+	getline(gz_in.iss, myLine, '\n');
+	getline(gz_in.iss, myBuffer, '#');
+
+  std::istringstream inSpansPoint;
+  inSpansPoint.str(myBuffer);
+
+  // SpansPoint oSpansPoint;
+  // oSpansPoint.setSpanLength(5,4);
+  // oSpansPoint.loadRef(inSpansPoint);
+
+	getline(gz_in.iss, myLine, '\n');
+	getline(gz_in.iss, myBuffer, '#');
+	std::istringstream inFragmentsInROI;
+	inFragmentsInROI.str(myBuffer);
+  
+  // FragmentsInROI oFragmentsInROI;
+  // FragmentsInChr oFragmentsInChr;
+
+	// oFragmentsInROI.loadRef(inFragmentsInROI);
+
+	getline(gz_in.iss, myLine, '\n');
+	getline(gz_in.iss, myBuffer, '#');
+  std::istringstream inJuncCount;
+  inJuncCount.str(myBuffer);
+
+  // JunctionCount oJuncCount;
+  // oJuncCount.loadRef(inJuncCount);
+
+	// Ensure valid reference termination:
+	getline(gz_in.iss, myLine, '\n');    
+	if(strncmp(myLine.c_str(), refEOF, 4) != 0) {
+		Rcout << "Invalid IRFinder reference detected\n";
+		return(0);
+	}
+  
+  FragmentsMap oFragMap;
+  
+  BAM2blocks BB;
+  
+  // BB.registerCallbackChrMappingChange( std::bind(&JunctionCount::ChrMapUpdate, &oJuncCount, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&JunctionCount::ProcessBlocks, &oJuncCount, std::placeholders::_1) );
+  
+  // BB.registerCallbackChrMappingChange( std::bind(&FragmentsInChr::ChrMapUpdate, &oFragmentsInChr, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&FragmentsInChr::ProcessBlocks, &oFragmentsInChr, std::placeholders::_1) );
+  
+  // BB.registerCallbackChrMappingChange( std::bind(&SpansPoint::ChrMapUpdate, &oSpansPoint, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&SpansPoint::ProcessBlocks, &oSpansPoint, std::placeholders::_1) );
+      
+  // BB.registerCallbackChrMappingChange( std::bind(&FragmentsInROI::ChrMapUpdate, &oFragmentsInROI, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&FragmentsInROI::ProcessBlocks, &oFragmentsInROI, std::placeholders::_1) );
+  
+  // BB.registerCallbackChrMappingChange( std::bind(&CoverageBlocks::ChrMapUpdate, &oCoverageBlocks, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&CoverageBlocks::ProcessBlocks, &oCoverageBlocks, std::placeholders::_1) );
+
+  BB.registerCallbackChrMappingChange( std::bind(&FragmentsMap::ChrMapUpdate, &oFragMap, std::placeholders::_1) );
+  BB.registerCallbackProcessBlocks( std::bind(&FragmentsMap::ProcessBlocks, &oFragMap, std::placeholders::_1) );
+
+	if(verbose) {  
+		Rcout << "Processing BAM file\n";
+  }  
+  BAMReader inbam;
+  std::ifstream inbam_stream;
+  inbam_stream.open(s_bam, std::ios::in | std::ios::binary);
+  inbam.SetInputHandle(&inbam_stream);
+  
+  BB.openFile(&inbam); // This file needs to be a decompressed BAM. (setup via fifo / or expect already decompressed via stdin).
+  BB.processAll(myLine, verbose);
+
+// Write output to file:  
+	if(verbose) {  
+		Rcout << "Writing output file\n";
+	}
+  std::ofstream out;
+  out.open(s_output_txt, std::ios::binary);
+
+// GZ compression:
+  GZWriter outGZ;
+  outGZ.SetOutputHandle(&out);
+
+// Write stats here:
+
+  outGZ.writeline("BAM_report\tValue");
+  outGZ.writestring(myLine);
+  outGZ.writeline("");
+
+	// int directionality = 0;
+  // directionality = oJuncCount.Directional(myLine);
+  // outGZ.writeline("Directionality\tValue");
+  // outGZ.writestring(myLine);
+  // outGZ.writeline("");
+
+// Generate output but save this to strings:
+	std::string myLine_ROI;
+	std::string myLine_JC;
+	std::string myLine_SP;
+	std::string myLine_Chr;
+	std::string myLine_ND;
+	std::string myLine_Dir;
+	std::string myLine_QC;
+
+  // oFragmentsInROI.WriteOutput(myLine_ROI, myLine_QC);
+	// oJuncCount.WriteOutput(myLine_JC, myLine_QC);
+	// oSpansPoint.WriteOutput(myLine_SP, myLine_QC);
+	// oFragmentsInChr.WriteOutput(myLine_Chr, myLine_QC);
+	// oCoverageBlocks.WriteOutput(myLine_ND, myLine_QC, oJuncCount, oSpansPoint);
+  // if (directionality != 0) {
+    // oCoverageBlocks.WriteOutput(myLine_Dir, myLine_QC, oJuncCount, oSpansPoint, directionality); // Directional.
+	// }
+
+  // outGZ.writeline("QC\tValue");
+  // outGZ.writestring(myLine_QC);
+  // outGZ.writeline("");
+	
+  // outGZ.writeline("ROIname\ttotal_hits\tpositive_strand_hits\tnegative_strand_hits");
+  // outGZ.writestring(myLine_ROI);
+  // outGZ.writeline("");
+  
+  // outGZ.writeline("JC_seqname\tstart\tend\tstrand\ttotal\tpos\tneg");
+  // outGZ.writestring(myLine_JC);
+  // outGZ.writeline("");
+  
+  // outGZ.writeline("SP_seqname\tcoord\ttotal\tpos\tneg");
+  // outGZ.writestring(myLine_SP);
+  // outGZ.writeline("");
+  
+  // outGZ.writeline("ChrCoverage_seqname\ttotal\tpos\tneg");
+  // outGZ.writestring(myLine_Chr);
+  // outGZ.writeline("");
+  
+  // outGZ.writestring(myLine_ND);
+  // outGZ.writeline("");
+  
+  // if (directionality != 0) {
+    // outGZ.writestring(myLine_Dir);
+    // outGZ.writeline("");
+  // }
+
+  outGZ.flush(true);
+  out.flush(); out.close();
+  
+  // Write Coverage Binary file:
+  
+  std::ofstream ofCOV;
+  ofCOV.open(s_output_cov, std::ofstream::binary);
+   
+  covFile outCOV;
+  outCOV.SetOutputHandle(&ofCOV);
+  
+	oFragMap.sort_and_collapse_final(verbose);
+  oFragMap.WriteBinary(&outCOV, BB.chr_names, BB.chr_lens);
+  ofCOV.close();
+  
+  return(0);
+}

@@ -105,6 +105,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// IRF_main_debug
+int IRF_main_debug(std::string bam_file, std::string reference_file, std::string output_file, bool verbose);
+RcppExport SEXP _NxtIRF_IRF_main_debug(SEXP bam_fileSEXP, SEXP reference_fileSEXP, SEXP output_fileSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type bam_file(bam_fileSEXP);
+    Rcpp::traits::input_parameter< std::string >::type reference_file(reference_fileSEXP);
+    Rcpp::traits::input_parameter< std::string >::type output_file(output_fileSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(IRF_main_debug(bam_file, reference_file, output_file, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // IRF_GenerateMappabilityReads
 int IRF_GenerateMappabilityReads(std::string genome_file, std::string out_fa, int read_len, int read_stride, int error_pos);
 RcppExport SEXP _NxtIRF_IRF_GenerateMappabilityReads(SEXP genome_fileSEXP, SEXP out_faSEXP, SEXP read_lenSEXP, SEXP read_strideSEXP, SEXP error_posSEXP) {
@@ -145,6 +159,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_NxtIRF_IRF_gunzip_DF", (DL_FUNC) &_NxtIRF_IRF_gunzip_DF, 2},
     {"_NxtIRF_IRF_main", (DL_FUNC) &_NxtIRF_IRF_main, 4},
     {"_NxtIRF_IRF_main_multithreaded", (DL_FUNC) &_NxtIRF_IRF_main_multithreaded, 4},
+    {"_NxtIRF_IRF_main_debug", (DL_FUNC) &_NxtIRF_IRF_main_debug, 4},
     {"_NxtIRF_IRF_GenerateMappabilityReads", (DL_FUNC) &_NxtIRF_IRF_GenerateMappabilityReads, 5},
     {"_NxtIRF_IRF_GenerateMappabilityRegions", (DL_FUNC) &_NxtIRF_IRF_GenerateMappabilityRegions, 5},
     {NULL, NULL, 0}
