@@ -492,7 +492,9 @@ int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, co
 }
 
 CoverageBlocks::~CoverageBlocks() {
-	empty_map = new std::map<string, std::vector<CoverageBlock>>;
-	chrName_CoverageBlocks.swap(*empty_map);
-	delete empty_map;
+  for (auto itChr=chrName_CoverageBlocks.begin(); itChr!=chrName_CoverageBlocks.end(); itChr++) {
+    empty_vector = new std::vector<CoverageBlock>;
+    itChr->second.swap(*empty_vector);
+    delete empty_vector
+  }
 }
