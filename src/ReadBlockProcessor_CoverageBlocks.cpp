@@ -496,3 +496,10 @@ CoverageBlocks::~CoverageBlocks() {
     std::vector<CoverageBlock>().swap(itChr->second);
   }
 }
+
+CoverageBlocks::Clean() {
+	Rcout << "Cleaning CoverageBlocks\n";
+	for (auto itChr=chrName_CoverageBlocks.begin(); itChr!=chrName_CoverageBlocks.end(); itChr++) {
+    std::vector<CoverageBlock>().swap(itChr->second);
+  }
+}

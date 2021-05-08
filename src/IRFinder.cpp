@@ -879,7 +879,7 @@ int IRF_main_debug(std::string bam_file, std::string reference_file, std::string
   // if (directionality != 0) {
 	// oCoverageBlocks.WriteOutput(myLine_Dir, myLine_QC, oJuncCount, oSpansPoint, directionality); // Directional.
 	// }
-
+	oCoverageBlocks.Clean();
   // outGZ.writeline("QC\tValue");
   // outGZ.writestring(myLine_QC);
   // outGZ.writeline("");
