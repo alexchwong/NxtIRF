@@ -493,8 +493,6 @@ int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, co
 
 CoverageBlocks::~CoverageBlocks() {
   for (auto itChr=chrName_CoverageBlocks.begin(); itChr!=chrName_CoverageBlocks.end(); itChr++) {
-    empty_vector = new std::vector<CoverageBlock>;
-    itChr->second.swap(*empty_vector);
-    delete empty_vector;
+    std::vector<CoverageBlock>().swap(itChr->second);
   }
 }

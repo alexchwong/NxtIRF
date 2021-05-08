@@ -39,7 +39,7 @@ class CoverageBlocks : public ReadBlockProcessor {
 		static const unsigned int coverage_block_max_length = 500;
 
 		// std::map<string, std::vector<CoverageBlock>> * empty_map;
-    std::vector<CoverageBlock> * empty_vector;
+    // std::vector<CoverageBlock> * empty_vector;
 	protected:
 		std::vector<BEDrecord> BEDrecords;
 
