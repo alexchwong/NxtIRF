@@ -822,7 +822,7 @@ int IRF_main_debug(std::string bam_file, std::string reference_file, std::string
   BB.registerCallbackChrMappingChange( std::bind(&FragmentsInROI::ChrMapUpdate, &oFragmentsInROI, std::placeholders::_1) );
   BB.registerCallbackProcessBlocks( std::bind(&FragmentsInROI::ProcessBlocks, &oFragmentsInROI, std::placeholders::_1) );
   
-  // BB.registerCallbackChrMappingChange( std::bind(&CoverageBlocks::ChrMapUpdate, &oCoverageBlocks, std::placeholders::_1) );
+  BB.registerCallbackChrMappingChange( std::bind(&CoverageBlocks::ChrMapUpdate, &oCoverageBlocks, std::placeholders::_1) );
   // BB.registerCallbackProcessBlocks( std::bind(&CoverageBlocks::ProcessBlocks, &oCoverageBlocks, std::placeholders::_1) );
 
   BB.registerCallbackChrMappingChange( std::bind(&FragmentsMap::ChrMapUpdate, &oFragMap, std::placeholders::_1) );
@@ -875,10 +875,10 @@ int IRF_main_debug(std::string bam_file, std::string reference_file, std::string
 	oJuncCount.WriteOutput(myLine_JC, myLine_QC);
 	oSpansPoint.WriteOutput(myLine_SP, myLine_QC);
 	oFragmentsInChr.WriteOutput(myLine_Chr, myLine_QC);
-	// oCoverageBlocks.WriteOutput(myLine_ND, myLine_QC, oJuncCount, oSpansPoint);
-  // if (directionality != 0) {
-	// oCoverageBlocks.WriteOutput(myLine_Dir, myLine_QC, oJuncCount, oSpansPoint, directionality); // Directional.
-	// }
+	oCoverageBlocks.WriteOutput(myLine_ND, myLine_QC, oJuncCount, oSpansPoint);
+  if (directionality != 0) {
+	oCoverageBlocks.WriteOutput(myLine_Dir, myLine_QC, oJuncCount, oSpansPoint, directionality); // Directional.
+	}
 
   outGZ.writeline("QC\tValue");
   outGZ.writestring(myLine_QC);
@@ -900,13 +900,13 @@ int IRF_main_debug(std::string bam_file, std::string reference_file, std::string
   outGZ.writestring(myLine_Chr);
   outGZ.writeline("");
   
-  // outGZ.writestring(myLine_ND);
-  // outGZ.writeline("");
+  outGZ.writestring(myLine_ND);
+  outGZ.writeline("");
   
-  // if (directionality != 0) {
-    // outGZ.writestring(myLine_Dir);
-    // outGZ.writeline("");
-  // }
+  if (directionality != 0) {
+    outGZ.writestring(myLine_Dir);
+    outGZ.writeline("");
+  }
 
   outGZ.flush(true);
   out.flush(); out.close();
