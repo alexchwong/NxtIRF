@@ -126,9 +126,7 @@ void CoverageBlocks::ChrMapUpdate(const std::vector<string> &chrmap) {
 
 
 void CoverageBlocks::ProcessBlocks(const FragmentBlocks &blocks) {
-/*
-
-  std::vector<CoverageBlock>::iterator it_coverblock;
+	std::vector<CoverageBlock>::iterator it_coverblock;
 	unsigned int start;
 	unsigned int end;
 
@@ -154,8 +152,6 @@ void CoverageBlocks::ProcessBlocks(const FragmentBlocks &blocks) {
 			}
 		}
 	}
-
-*/
 }
 
 void CoverageBlocks::fillHist(std::map<unsigned int,unsigned int> &hist, const std::string &chrName, const std::vector<std::pair<unsigned int,unsigned int>> &blocks) const {
