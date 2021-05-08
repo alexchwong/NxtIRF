@@ -46,7 +46,6 @@ class CoverageBlocks : public ReadBlockProcessor {
 
 	public:
 		~CoverageBlocks();
-		void Clean();
 		void ProcessBlocks(const FragmentBlocks &fragblock);
 		void ChrMapUpdate(const std::vector<string> &chrmap);
 		void loadRef(std::istringstream &IN);
