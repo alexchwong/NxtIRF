@@ -146,7 +146,7 @@ void CoverageBlocks::ProcessBlocks(const FragmentBlocks &blocks) {
 				start
 			);
 			while (it_coverblock != (*chrID_CoverageBlocks.at(blocks.chr_id)).end() && it_coverblock->posIsAfterStart(end)) {
-				it_coverblock->RecordCover(start, end, blocks.direction);
+				// it_coverblock->RecordCover(start, end, blocks.direction);
 
 				it_coverblock++;
 			}
