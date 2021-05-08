@@ -16,10 +16,10 @@ CoverageBlock::CoverageBlock(unsigned int start, unsigned int end) {
 
 CoverageBlock::~CoverageBlock(){
     if(blockExtents != NULL) {
-        delete blockExtents;
+        // delete blockExtents;
     }
     if(blockExtentsL != NULL) {
-        delete blockExtentsL;
+        // delete blockExtentsL;
     }
 }
 //direction -- 0=False/Neg, 1=True/Pos.
