@@ -768,9 +768,8 @@ int IRF_main_debug(std::string bam_file, std::string reference_file, std::string
 
   std::istringstream inCoverageBlocks;
   inCoverageBlocks.str(myBuffer);
-  CoverageBlocksIRFinder * oCoverageBlocks;
-  oCoverageBlocks = new CoverageBlocksIRFinder;
-  oCoverageBlocks->loadRef(inCoverageBlocks);
+  CoverageBlocksIRFinder oCoverageBlocks;
+  oCoverageBlocks.loadRef(inCoverageBlocks);
 
 	getline(gz_in.iss, myLine, '\n');
 	getline(gz_in.iss, myBuffer, '#');
@@ -823,8 +822,8 @@ int IRF_main_debug(std::string bam_file, std::string reference_file, std::string
   // BB.registerCallbackChrMappingChange( std::bind(&FragmentsInROI::ChrMapUpdate, &oFragmentsInROI, std::placeholders::_1) );
   // BB.registerCallbackProcessBlocks( std::bind(&FragmentsInROI::ProcessBlocks, &oFragmentsInROI, std::placeholders::_1) );
   
-  BB.registerCallbackChrMappingChange( std::bind(&CoverageBlocks::ChrMapUpdate, &(*oCoverageBlocks), std::placeholders::_1) );
-  BB.registerCallbackProcessBlocks( std::bind(&CoverageBlocks::ProcessBlocks, &(*oCoverageBlocks), std::placeholders::_1) );
+  BB.registerCallbackChrMappingChange( std::bind(&CoverageBlocks::ChrMapUpdate, &oCoverageBlocks, std::placeholders::_1) );
+  BB.registerCallbackProcessBlocks( std::bind(&CoverageBlocks::ProcessBlocks, &oCoverageBlocks, std::placeholders::_1) );
 
   BB.registerCallbackChrMappingChange( std::bind(&FragmentsMap::ChrMapUpdate, &oFragMap, std::placeholders::_1) );
   BB.registerCallbackProcessBlocks( std::bind(&FragmentsMap::ProcessBlocks, &oFragMap, std::placeholders::_1) );
@@ -924,6 +923,5 @@ int IRF_main_debug(std::string bam_file, std::string reference_file, std::string
   oFragMap.WriteBinary(&outCOV, BB.chr_names, BB.chr_lens);
   ofCOV.close();
   
-  delete oCoverageBlocks;
   return(0);
 }
