@@ -16,11 +16,9 @@ CoverageBlock::CoverageBlock(unsigned int start, unsigned int end) {
 
 CoverageBlock::~CoverageBlock(){
     if(blockExtents != NULL) {
-        std::vector<start_stops>().swap(*blockExtents);
         delete blockExtents;
     }
     if(blockExtentsL != NULL) {
-        std::vector<start_stopsL>().swap(*blockExtentsL);
         delete blockExtentsL;
     }
 }
