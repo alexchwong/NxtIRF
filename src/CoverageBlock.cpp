@@ -167,10 +167,10 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 		//  even if not in the region of interest.
 
 		//special handling for the first base -- the one before the vector starts.
-		unsigned int depth = firstDepth[0]+firstDepth[1];
+		int depth = firstDepth[0]+firstDepth[1];
 		if (start <= blockStart) {
 			// use the first depth, before commencing in the vector.
-			hist[depth] ++;
+			hist[(unsigned int)depth] ++;
 		}
 
 		unsigned int startindex = max(blockStart+1, start) - blockStart - 1;
@@ -185,7 +185,7 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 				depth += it->second;
 			}
 			if (i>=startindex) {
-				hist[depth] ++;
+				hist[(unsigned int)depth] ++;
 			}
 		}
 	}
@@ -208,10 +208,10 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 		//  even if not in the region of interest.
 
 		//special handling for the first base -- the one before the vector starts.
-		unsigned int depth = firstDepth[dir];
+		int depth = firstDepth[dir];
 		if (start <= blockStart) {
 			// use the first depth, before commencing in the vector.
-			hist[depth] ++;
+			hist[(unsigned int)depth] ++;
 		}
 
 		unsigned int startindex = max(blockStart+1, start) - blockStart - 1;
@@ -226,7 +226,7 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 				depth += it->second;
 			}
 			if (i>=startindex) {
-				hist[depth] ++;
+				hist[(unsigned int)depth] ++;
 			}
 		}
 	}
