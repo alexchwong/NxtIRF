@@ -397,21 +397,24 @@ int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, co
 					measureDir = !BEDrec.direction;
 				}
 
-				std::map<unsigned int,unsigned int> hist;
+				std::map<unsigned int,unsigned int> * hist;
+				hist = new std::map<unsigned int,unsigned int>;
 				if (directionality == 0) {
-					fillHist(hist, BEDrec.chrName, BEDrec.blocks, FM);
+					fillHist(*hist, BEDrec.chrName, BEDrec.blocks, FM);
 				}else{
-					fillHist(hist, BEDrec.chrName, BEDrec.blocks, measureDir, FM);
+					fillHist(*hist, BEDrec.chrName, BEDrec.blocks, measureDir, FM);
 				}
-				intronTrimmedMean = trimmedMeanFromHist(hist, 40);
-				coverage = coverageFromHist(hist);
+				intronTrimmedMean = trimmedMeanFromHist(*hist, 40);
+				coverage = coverageFromHist(*hist);
 				oss << exclBases << "\t"
 					<< coverage << "\t"
 					<< intronTrimmedMean << "\t"
-					<< percentileFromHist(hist, 25) << "\t"
-					<< percentileFromHist(hist, 50) << "\t"
-					<< percentileFromHist(hist, 75) << "\t";
-
+					<< percentileFromHist(*hist, 25) << "\t"
+					<< percentileFromHist(*hist, 50) << "\t"
+					<< percentileFromHist(*hist, 75) << "\t";
+				hist->clear();
+				delete hist;
+				
 				if(s_clean.compare(0, 5, "clean") == 0) {
 					ID_clean += intronTrimmedMean;				
 				} else if(s_clean.find(KE) != string::npos) {
@@ -426,30 +429,44 @@ int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, co
 					oss << SPleft << "\t"
 						<< SPright << "\t";
 
-					hist.clear();
-					fillHist(hist, BEDrec.chrName, {{intronStart + 5, intronStart + 55}}, measureDir, FM);
-					oss << trimmedMeanFromHist(hist, 40) << "\t";
-					hist.clear();
-					fillHist(hist, BEDrec.chrName, {{intronEnd - 55, intronEnd - 5}}, measureDir, FM);
-					oss << trimmedMeanFromHist(hist, 40) << "\t";
+					hist = new std::map<unsigned int,unsigned int>;
+					fillHist(*hist, BEDrec.chrName, {{intronStart + 5, intronStart + 55}}, measureDir, FM);
+					oss << trimmedMeanFromHist(*hist, 40) << "\t";
+					hist->clear();
+					delete hist;
+					
+					hist = new std::map<unsigned int,unsigned int>;
+					fillHist(*hist, BEDrec.chrName, {{intronEnd - 55, intronEnd - 5}}, measureDir, FM);
+					oss << trimmedMeanFromHist(*hist, 40) << "\t";
+					hist->clear();
+					delete hist;	
+					
 					JCleft = JC.lookupLeft(BEDrec.chrName, intronStart, measureDir);
 					JCright = JC.lookupRight(BEDrec.chrName, intronEnd, measureDir);
 					JCexact = JC.lookup(BEDrec.chrName, intronStart, intronEnd, measureDir);
 					oss << JCleft << "\t"
 						<< JCright << "\t"
 						<< JCexact << "\t";
+				
+			
 				}else{
 					SPleft = SP.lookup(BEDrec.chrName, intronStart);
 					SPright = SP.lookup(BEDrec.chrName, intronEnd);
 					oss << SPleft << "\t"
 						<< SPright << "\t";			
 
-					hist.clear();
-					fillHist(hist, BEDrec.chrName, {{intronStart + 5, intronStart + 55}}, FM);
-					oss << trimmedMeanFromHist(hist, 40) << "\t";
-					hist.clear();
-					fillHist(hist, BEDrec.chrName, {{intronEnd - 55, intronEnd - 5}}, FM);
-					oss << trimmedMeanFromHist(hist, 40) << "\t";
+					hist = new std::map<unsigned int,unsigned int>;
+					fillHist(*hist, BEDrec.chrName, {{intronStart + 5, intronStart + 55}}, FM);
+					oss << trimmedMeanFromHist(*hist, 40) << "\t";
+					hist->clear();
+					delete hist;
+					
+					hist = new std::map<unsigned int,unsigned int>;
+					fillHist(*hist, BEDrec.chrName, {{intronEnd - 55, intronEnd - 5}}, FM);
+					oss << trimmedMeanFromHist(*hist, 40) << "\t";
+					hist->clear();
+					delete hist;
+					
 					JCleft = JC.lookupLeft(BEDrec.chrName, intronStart);
 					JCright = JC.lookupRight(BEDrec.chrName, intronEnd);
 					JCexact = JC.lookup(BEDrec.chrName, intronStart, intronEnd);
