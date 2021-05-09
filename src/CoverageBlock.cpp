@@ -16,12 +16,14 @@ CoverageBlock::CoverageBlock(unsigned int start, unsigned int end) {
 
 CoverageBlock::~CoverageBlock(){
     if(blockExtents != NULL) {
-			Rcout << "blockExtents being deleted\n";
-        delete blockExtents;
+			std::vector<start_stops> temp_vector;
+			temp_vector.swap(*blockExtents);
+			delete blockExtents;
     }
     if(blockExtentsL != NULL) {
-			Rcout << "blockExtentsL being deleted\n";
-        delete blockExtentsL;
+			std::vector<start_stopsL> temp_vector;
+			temp_vector.swap(*blockExtentsL);
+			delete blockExtentsL;
     }
 }
 
