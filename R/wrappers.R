@@ -330,7 +330,7 @@ get_multi_DT_from_gz = function(infile = "",
 #'  name
 #' @param start The 0-based start coordinate 
 #' @param end The 0-based end coordinate
-#' @param strand An integer denoting ths strand: "+" = 0, "-" = 1, "*" = 2
+#' @param strand An integer denoting ths strand: "-" = 0, "+" = 1, "*" = 2
 #' @return If seqname is left as "", returns an RLEList of the whole BAM file.
 #'   If seqname and coordinates are given, returns an RLE containing the
 #'   chromosome coordinate. Coordinates outside the given range will be set to 0
@@ -347,7 +347,7 @@ get_multi_DT_from_gz = function(infile = "",
 GetCoverage <- function(file, seqname = "", start = 0, end = 0, strand = 2) {
     if(!(as.numeric(strand) %in% c(0,1,2))) {
         .log(paste("In GetCoverage(),",
-            "Invalid strand. Must be either 0 (+), 1 (-) or 2(*)"))
+            "Invalid strand. Must be either 0 (-), 1 (+) or 2(*)"))
     }
     if(!is.numeric(start) || !is.numeric(end) || 
             (as.numeric(start) > as.numeric(end)) || 
