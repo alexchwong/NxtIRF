@@ -15,11 +15,12 @@ CoverageBlock::CoverageBlock(unsigned int start, unsigned int end) {
 }
 
 CoverageBlock::~CoverageBlock(){
-		Rcout << "CoverageBlock destructor running\n";
     if(blockExtents != NULL) {
+			Rcout << "blockExtents being deleted\n";
         delete blockExtents;
     }
     if(blockExtentsL != NULL) {
+			Rcout << "blockExtentsL being deleted\n";
         delete blockExtentsL;
     }
 }
