@@ -54,6 +54,9 @@ class CoverageBlocks : public ReadBlockProcessor {
 		void fillHist(std::map<unsigned int,unsigned int> &hist, const std::string &chrName, const std::vector<std::pair<unsigned int,unsigned int>> &blocks) const;
 		void fillHist(std::map<unsigned int,unsigned int> &hist, const std::string &chrName, const std::vector<std::pair<unsigned int,unsigned int>> &blocks, bool direction) const;
 
+		void fillHist(std::map<unsigned int,unsigned int> &hist, const std::string &chrName, const std::vector<std::pair<unsigned int,unsigned int>> &blocks, const FragmentsMap &FM) const;
+		void fillHist(std::map<unsigned int,unsigned int> &hist, const std::string &chrName, const std::vector<std::pair<unsigned int,unsigned int>> &blocks, bool direction, const FragmentsMap &FM) const;
+
 		double meanFromHist(const std::map<unsigned int,unsigned int> &hist) const;
 		double coverageFromHist(const std::map<unsigned int,unsigned int> &hist) const;
 		double percentileFromHist(const std::map<unsigned int,unsigned int> &hist, unsigned int percentile) const;
@@ -62,7 +65,7 @@ class CoverageBlocks : public ReadBlockProcessor {
 
 class CoverageBlocksIRFinder : public CoverageBlocks {
 	public:
-		int WriteOutput(std::string& output, std::string& QC, const JunctionCount &JC, const SpansPoint &SP, int directionality = 0) const;
+		int WriteOutput(std::string& output, std::string& QC, const JunctionCount &JC, const SpansPoint &SP, const FragmentsMap &FM, int directionality = 0) const;
 };
 
 

@@ -184,6 +184,37 @@ void CoverageBlocks::fillHist(std::map<unsigned int,unsigned int> &hist, const s
 	}
 }
 
+// Using FragmentsMap
+void CoverageBlocks::fillHist(std::map<unsigned int,unsigned int> &hist, const std::string &chrName, const std::vector<std::pair<unsigned int,unsigned int>> &blocks, const FragmentsMap &FM) const{
+	std::vector<CoverageBlock>::const_iterator it_CB;
+	for (std::vector<std::pair<unsigned int,unsigned int>>::const_iterator it_blocks=blocks.begin(); it_blocks!=blocks.end(); it_blocks++) {
+		it_CB = upper_bound(
+			chrName_CoverageBlocks.at(chrName).begin(),
+			chrName_CoverageBlocks.at(chrName).end(),
+			it_blocks->first
+			);
+		while (it_CB != chrName_CoverageBlocks.at(chrName).end() && it_CB->posIsAfterStart(it_blocks->second)) {
+			it_CB->updateCoverageHist(hist, it_blocks->first, it_blocks->second, FM, chrName);  //for non-dir.
+			it_CB++;
+		}
+	}
+}
+
+void CoverageBlocks::fillHist(std::map<unsigned int,unsigned int> &hist, const std::string &chrName, const std::vector<std::pair<unsigned int,unsigned int>> &blocks, bool direction, const FragmentsMap &FM) const{
+	std::vector<CoverageBlock>::const_iterator it_CB;
+	for (std::vector<std::pair<unsigned int,unsigned int>>::const_iterator it_blocks=blocks.begin(); it_blocks!=blocks.end(); it_blocks++) {
+		it_CB = upper_bound(
+			chrName_CoverageBlocks.at(chrName).begin(),
+			chrName_CoverageBlocks.at(chrName).end(),
+			it_blocks->first
+			);
+		while (it_CB != chrName_CoverageBlocks.at(chrName).end() && it_CB->posIsAfterStart(it_blocks->second)) {
+			it_CB->updateCoverageHist(hist, it_blocks->first, it_blocks->second, direction, FM, chrName);  //directional.
+			it_CB++;
+		}
+	}
+}
+
 
 double CoverageBlocks::meanFromHist(const std::map<unsigned int,unsigned int> &hist) const {
 	unsigned long long total = 0;
@@ -300,7 +331,7 @@ int CoverageBlocks::WriteOutput(std::string& output) const {
 }
 
 
-int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, const JunctionCount &JC, const SpansPoint &SP, int directionality) const {
+int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, const JunctionCount &JC, const SpansPoint &SP, const FragmentsMap &FM, int directionality) const {
     std::ostringstream oss; std::ostringstream oss_qc; 
 	// Custom output function - related to the IRFinder needs
   if(directionality == 0) {
@@ -368,9 +399,9 @@ int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, co
 
 				std::map<unsigned int,unsigned int> hist;
 				if (directionality == 0) {
-					fillHist(hist, BEDrec.chrName, BEDrec.blocks);
+					fillHist(hist, BEDrec.chrName, BEDrec.blocks, FM);
 				}else{
-					fillHist(hist, BEDrec.chrName, BEDrec.blocks, measureDir);
+					fillHist(hist, BEDrec.chrName, BEDrec.blocks, measureDir, FM);
 				}
 				intronTrimmedMean = trimmedMeanFromHist(hist, 40);
 				coverage = coverageFromHist(hist);
@@ -396,10 +427,10 @@ int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, co
 						<< SPright << "\t";
 
 					hist.clear();
-					fillHist(hist, BEDrec.chrName, {{intronStart + 5, intronStart + 55}}, measureDir);
+					fillHist(hist, BEDrec.chrName, {{intronStart + 5, intronStart + 55}}, measureDir, FM);
 					oss << trimmedMeanFromHist(hist, 40) << "\t";
 					hist.clear();
-					fillHist(hist, BEDrec.chrName, {{intronEnd - 55, intronEnd - 5}}, measureDir);
+					fillHist(hist, BEDrec.chrName, {{intronEnd - 55, intronEnd - 5}}, measureDir, FM);
 					oss << trimmedMeanFromHist(hist, 40) << "\t";
 					JCleft = JC.lookupLeft(BEDrec.chrName, intronStart, measureDir);
 					JCright = JC.lookupRight(BEDrec.chrName, intronEnd, measureDir);
@@ -414,10 +445,10 @@ int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, co
 						<< SPright << "\t";			
 
 					hist.clear();
-					fillHist(hist, BEDrec.chrName, {{intronStart + 5, intronStart + 55}});
+					fillHist(hist, BEDrec.chrName, {{intronStart + 5, intronStart + 55}}, FM);
 					oss << trimmedMeanFromHist(hist, 40) << "\t";
 					hist.clear();
-					fillHist(hist, BEDrec.chrName, {{intronEnd - 55, intronEnd - 5}});
+					fillHist(hist, BEDrec.chrName, {{intronEnd - 55, intronEnd - 5}}, FM);
 					oss << trimmedMeanFromHist(hist, 40) << "\t";
 					JCleft = JC.lookupLeft(BEDrec.chrName, intronStart);
 					JCright = JC.lookupRight(BEDrec.chrName, intronEnd);
