@@ -16,7 +16,7 @@ name}
 
 \item{end}{The 0-based end coordinate}
 
-\item{strand}{An integer denoting ths strand: "+" = 0, "-" = 1, "*" = 2}
+\item{strand}{An integer denoting ths strand: "-" = 0, "+" = 1, "*" = 2}
 }
 \value{
 If seqname is left as "", returns an RLEList of the whole BAM file.
