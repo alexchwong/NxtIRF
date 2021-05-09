@@ -29,6 +29,7 @@ using namespace std;
 		using namespace Rcpp;
 		#include <progress.hpp>
 		// [[Rcpp::depends(RcppProgress)]]
+		// [[Rcpp::plugins("cpp11")]]
 	#else
 		#define Rcout cout
 	#endif

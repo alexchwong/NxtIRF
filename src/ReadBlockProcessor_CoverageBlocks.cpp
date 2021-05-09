@@ -494,9 +494,6 @@ int CoverageBlocksIRFinder::WriteOutput(std::string& output, std::string& QC, co
 CoverageBlocks::~CoverageBlocks() {
 	Rcout << "Cleaning CoverageBlocks\n";
 	for (auto itChr=chrName_CoverageBlocks.begin(); itChr!=chrName_CoverageBlocks.end(); itChr++) {
-		for (std::vector<CoverageBlock>::iterator it = itChr->second.begin(); it != itChr->second.end(); ++it)
-			it->Clean();
-		
 		itChr->second.clear();
 		itChr->second.shrink_to_fit();
   }
