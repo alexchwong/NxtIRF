@@ -157,7 +157,7 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 // updateCoverageHist from completed FragmentMap - non-directional:
 void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist, unsigned int start, unsigned int end, const FragmentsMap &FM, const std::string &chrName) const {
 	std::vector< std::pair<unsigned int, int> > vec;
-	FM.GetVectorPair(vec, blockStart, blockEnd, chrName, 2);
+	FM.GetVectorPair(vec, blockStart, blockEnd + 1, chrName, 2);
 
 	if (vec.size() == 0) {
 		// how many bases in this block?
@@ -195,9 +195,9 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist, unsigned int start, unsigned int end, bool dir, const FragmentsMap &FM, const std::string &chrName) const {
 	std::vector< std::pair<unsigned int, int> > vec;
 	if(dir) {
-		FM.GetVectorPair(vec, blockStart, blockEnd, chrName, 1);
+		FM.GetVectorPair(vec, blockStart, blockEnd + 1, chrName, 1);
 	} else {
-		FM.GetVectorPair(vec, blockStart, blockEnd, chrName, 0);
+		FM.GetVectorPair(vec, blockStart, blockEnd + 1, chrName, 0);
 	}
 	
 	if (vec.size() == 0) {
