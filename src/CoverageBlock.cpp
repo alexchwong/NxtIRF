@@ -178,10 +178,10 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 		
 		auto it=vec.begin();
 		for (unsigned int i=0; i<endindex; i++) {
-			while(it->first < i + blockStart && it != vec.end()) {
+			while(it->first < (i + blockStart + 1) && it != vec.end()) {
 				it++;
 			};
-			if(it->first == i + blockStart) {
+			if(it->first == (i + blockStart + 1)) {
 				depth += it->second;
 			}
 			if (i>=startindex) {
@@ -191,7 +191,7 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 	}
 }
 
-// updateCoverageHist from completed FragmentMap:
+// updateCoverageHist from completed FragmentMap - directional:
 void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist, unsigned int start, unsigned int end, bool dir, const FragmentsMap &FM, const std::string &chrName) const {
 	std::vector< std::pair<unsigned int, int> > vec;
 	if(dir) {
@@ -208,7 +208,7 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 		//  even if not in the region of interest.
 
 		//special handling for the first base -- the one before the vector starts.
-		unsigned int depth = firstDepth[0]+firstDepth[1];
+		unsigned int depth = firstDepth[dir];
 		if (start <= blockStart) {
 			// use the first depth, before commencing in the vector.
 			hist[depth] ++;
@@ -219,10 +219,10 @@ void CoverageBlock::updateCoverageHist(std::map<unsigned int,unsigned int> &hist
 		
 		auto it=vec.begin();
 		for (unsigned int i=0; i<endindex; i++) {
-			while(it->first < i + blockStart && it != vec.end()) {
+			while(it->first < (i + blockStart + 1) && it != vec.end()) {
 				it++;
 			};
-			if(it->first == i + blockStart) {
+			if(it->first == (i + blockStart + 1)) {
 				depth += it->second;
 			}
 			if (i>=startindex) {
