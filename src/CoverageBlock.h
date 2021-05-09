@@ -51,7 +51,8 @@ class CoverageBlock {
 		};
 	public:
 		CoverageBlock(unsigned int start, unsigned int end);
-        ~CoverageBlock();
+		~CoverageBlock();
+		void Clean();
 		void RecordCover(unsigned int start, unsigned int end, bool dir);
 		//RetrieveCover(..);
 		void print(std::ostream& os) const;
