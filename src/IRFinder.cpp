@@ -359,7 +359,7 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
 			return(0);
 		}
   
-  FragmentsMap oFragMap;
+  // FragmentsMap oFragMap;
   
   BAM2blocks BB;
   
@@ -378,8 +378,8 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   // BB.registerCallbackChrMappingChange( std::bind(&CoverageBlocks::ChrMapUpdate, &oCoverageBlocks, std::placeholders::_1) );
   // BB.registerCallbackProcessBlocks( std::bind(&CoverageBlocks::ProcessBlocks, &oCoverageBlocks, std::placeholders::_1) );
 
-  BB.registerCallbackChrMappingChange( std::bind(&FragmentsMap::ChrMapUpdate, &oFragMap, std::placeholders::_1) );
-  BB.registerCallbackProcessBlocks( std::bind(&FragmentsMap::ProcessBlocks, &oFragMap, std::placeholders::_1) );
+  // BB.registerCallbackChrMappingChange( std::bind(&FragmentsMap::ChrMapUpdate, &oFragMap, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&FragmentsMap::ProcessBlocks, &oFragMap, std::placeholders::_1) );
 
 	if(verbose) {  
 		Rcout << "Processing BAM file\n";
@@ -395,6 +395,7 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
 
   // Write Coverage Binary file:
   
+  /*
   std::ofstream ofCOV;
   ofCOV.open(s_output_cov, std::ofstream::binary);
    
@@ -474,7 +475,7 @@ std::string myLine_QC;
   outGZ.flush(true);
   out.flush(); out.close();
   
-
+*/
   
   return(0);
 }
