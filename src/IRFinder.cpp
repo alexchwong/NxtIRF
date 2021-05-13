@@ -328,21 +328,21 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
     getline(gz_in.iss, myLine, '\n');
     getline(gz_in.iss, myBuffer, '#');
 
-  SpansPoint oSpansPoint;
-  oSpansPoint.setSpanLength(5,4);
-  std::istringstream inSpansPoint;
-  inSpansPoint.str(myBuffer);
-  oSpansPoint.loadRef(inSpansPoint);
+  // SpansPoint oSpansPoint;
+  // oSpansPoint.setSpanLength(5,4);
+  // std::istringstream inSpansPoint;
+  // inSpansPoint.str(myBuffer);
+  // oSpansPoint.loadRef(inSpansPoint);
 
     getline(gz_in.iss, myLine, '\n');
     getline(gz_in.iss, myBuffer, '#');
   
-  FragmentsInROI oFragmentsInROI;
-  FragmentsInChr oFragmentsInChr;
+  // FragmentsInROI oFragmentsInROI;
+  // FragmentsInChr oFragmentsInChr;
 
-    std::istringstream inFragmentsInROI;
-    inFragmentsInROI.str(myBuffer);
-    oFragmentsInROI.loadRef(inFragmentsInROI);
+    // std::istringstream inFragmentsInROI;
+    // inFragmentsInROI.str(myBuffer);
+    // oFragmentsInROI.loadRef(inFragmentsInROI);
 
     getline(gz_in.iss, myLine, '\n');
     getline(gz_in.iss, myBuffer, '#');
@@ -366,14 +366,14 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   // BB.registerCallbackChrMappingChange( std::bind(&JunctionCount::ChrMapUpdate, &oJuncCount, std::placeholders::_1) );
   // BB.registerCallbackProcessBlocks( std::bind(&JunctionCount::ProcessBlocks, &oJuncCount, std::placeholders::_1) );
   
-  BB.registerCallbackChrMappingChange( std::bind(&FragmentsInChr::ChrMapUpdate, &oFragmentsInChr, std::placeholders::_1) );
-  BB.registerCallbackProcessBlocks( std::bind(&FragmentsInChr::ProcessBlocks, &oFragmentsInChr, std::placeholders::_1) );
+  // BB.registerCallbackChrMappingChange( std::bind(&FragmentsInChr::ChrMapUpdate, &oFragmentsInChr, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&FragmentsInChr::ProcessBlocks, &oFragmentsInChr, std::placeholders::_1) );
   
-  BB.registerCallbackChrMappingChange( std::bind(&SpansPoint::ChrMapUpdate, &oSpansPoint, std::placeholders::_1) );
-  BB.registerCallbackProcessBlocks( std::bind(&SpansPoint::ProcessBlocks, &oSpansPoint, std::placeholders::_1) );
+  // BB.registerCallbackChrMappingChange( std::bind(&SpansPoint::ChrMapUpdate, &oSpansPoint, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&SpansPoint::ProcessBlocks, &oSpansPoint, std::placeholders::_1) );
       
-  BB.registerCallbackChrMappingChange( std::bind(&FragmentsInROI::ChrMapUpdate, &oFragmentsInROI, std::placeholders::_1) );
-  BB.registerCallbackProcessBlocks( std::bind(&FragmentsInROI::ProcessBlocks, &oFragmentsInROI, std::placeholders::_1) );
+  // BB.registerCallbackChrMappingChange( std::bind(&FragmentsInROI::ChrMapUpdate, &oFragmentsInROI, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&FragmentsInROI::ProcessBlocks, &oFragmentsInROI, std::placeholders::_1) );
   
   BB.registerCallbackChrMappingChange( std::bind(&CoverageBlocks::ChrMapUpdate, &oCoverageBlocks, std::placeholders::_1) );
   BB.registerCallbackProcessBlocks( std::bind(&CoverageBlocks::ProcessBlocks, &oCoverageBlocks, std::placeholders::_1) );
@@ -435,10 +435,10 @@ std::string myLine_ND;
 std::string myLine_Dir;
 std::string myLine_QC;
 
-  oFragmentsInROI.WriteOutput(myLine_ROI, myLine_QC);
+  // oFragmentsInROI.WriteOutput(myLine_ROI, myLine_QC);
 	// oJuncCount.WriteOutput(myLine_JC, myLine_QC);
-	oSpansPoint.WriteOutput(myLine_SP, myLine_QC);
-	oFragmentsInChr.WriteOutput(myLine_Chr, myLine_QC);
+	// oSpansPoint.WriteOutput(myLine_SP, myLine_QC);
+	// oFragmentsInChr.WriteOutput(myLine_Chr, myLine_QC);
 	// oCoverageBlocks.WriteOutput(myLine_ND, myLine_QC, oJuncCount, oSpansPoint, oFragMap);
   // if (directionality != 0) {
     // oCoverageBlocks.WriteOutput(myLine_Dir, myLine_QC, oJuncCount, oSpansPoint, oFragMap, directionality); // Directional.
