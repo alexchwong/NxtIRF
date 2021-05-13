@@ -320,29 +320,29 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
 		
     getline(gz_in.iss, myBuffer, '#');  // this is the data block for ref-cover.bed
 
-  // CoverageBlocksIRFinder oCoverageBlocks;
-  // std::istringstream inCoverageBlocks;
-  // inCoverageBlocks.str(myBuffer);
-  // oCoverageBlocks.loadRef(inCoverageBlocks);
+  CoverageBlocksIRFinder oCoverageBlocks;
+  std::istringstream inCoverageBlocks;
+  inCoverageBlocks.str(myBuffer);
+  oCoverageBlocks.loadRef(inCoverageBlocks);
 
     getline(gz_in.iss, myLine, '\n');
     getline(gz_in.iss, myBuffer, '#');
 
-  // SpansPoint oSpansPoint;
-  // oSpansPoint.setSpanLength(5,4);
-  // std::istringstream inSpansPoint;
-  // inSpansPoint.str(myBuffer);
-  // oSpansPoint.loadRef(inSpansPoint);
+  SpansPoint oSpansPoint;
+  oSpansPoint.setSpanLength(5,4);
+  std::istringstream inSpansPoint;
+  inSpansPoint.str(myBuffer);
+  oSpansPoint.loadRef(inSpansPoint);
 
     getline(gz_in.iss, myLine, '\n');
     getline(gz_in.iss, myBuffer, '#');
   
-  // FragmentsInROI oFragmentsInROI;
-  // FragmentsInChr oFragmentsInChr;
+  FragmentsInROI oFragmentsInROI;
+  FragmentsInChr oFragmentsInChr;
 
-    // std::istringstream inFragmentsInROI;
-    // inFragmentsInROI.str(myBuffer);
-    // oFragmentsInROI.loadRef(inFragmentsInROI);
+    std::istringstream inFragmentsInROI;
+    inFragmentsInROI.str(myBuffer);
+    oFragmentsInROI.loadRef(inFragmentsInROI);
 
     getline(gz_in.iss, myLine, '\n');
     getline(gz_in.iss, myBuffer, '#');
@@ -363,7 +363,7 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   
   // FragmentsMap oFragMap;
   
-  BAM2blocks BB;
+  // BAM2blocks BB;
   
   // BB.registerCallbackChrMappingChange( std::bind(&JunctionCount::ChrMapUpdate, &oJuncCount, std::placeholders::_1) );
   // BB.registerCallbackProcessBlocks( std::bind(&JunctionCount::ProcessBlocks, &oJuncCount, std::placeholders::_1) );
@@ -383,16 +383,16 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   // BB.registerCallbackChrMappingChange( std::bind(&FragmentsMap::ChrMapUpdate, &oFragMap, std::placeholders::_1) );
   // BB.registerCallbackProcessBlocks( std::bind(&FragmentsMap::ProcessBlocks, &oFragMap, std::placeholders::_1) );
 
-	if(verbose) {  
-		Rcout << "Processing BAM file\n";
-  }  
-  BAMReader inbam;
-  std::ifstream inbam_stream;
-  inbam_stream.open(s_bam, std::ios::in | std::ios::binary);
-  inbam.SetInputHandle(&inbam_stream);
+	// if(verbose) {  
+		// Rcout << "Processing BAM file\n";
+  // }  
+  // BAMReader inbam;
+  // std::ifstream inbam_stream;
+  // inbam_stream.open(s_bam, std::ios::in | std::ios::binary);
+  // inbam.SetInputHandle(&inbam_stream);
   
-  BB.openFile(&inbam); // This file needs to be a decompressed BAM. (setup via fifo / or expect already decompressed via stdin).
-  BB.processAll(myLine, verbose);
+  // BB.openFile(&inbam); // This file needs to be a decompressed BAM. (setup via fifo / or expect already decompressed via stdin).
+  // BB.processAll(myLine, verbose);
 	// oFragMap.sort_and_collapse_final(verbose);
 
   // Write Coverage Binary file:
