@@ -347,10 +347,10 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
     getline(gz_in.iss, myLine, '\n');
     getline(gz_in.iss, myBuffer, '#');
 
-  // JunctionCount oJuncCount;
-  // std::istringstream inJuncCount;
-  // inJuncCount.str(myBuffer);
-  // oJuncCount.loadRef(inJuncCount);
+  JunctionCount oJuncCount;
+  std::istringstream inJuncCount;
+  inJuncCount.str(myBuffer);
+  oJuncCount.loadRef(inJuncCount);
 
 	// Ensure valid reference termination:
 		getline(gz_in.iss, myLine, '\n');    
@@ -358,6 +358,8 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
 			Rcout << "Invalid IRFinder reference detected\n";
 			return(0);
 		}
+  
+  gz_in.closeGZ();
   
   // FragmentsMap oFragMap;
   
@@ -575,6 +577,8 @@ int IRF_main_multithreaded(std::string reference_file, StringVector bam_files, S
 		inJuncCount.str(myBuffer);
 		oJuncCount.loadRef(inJuncCount);
 		
+    gz_in.closeGZ();
+    
 		FragmentsMap oFragMap;
 		
 		BAM2blocks BB;
