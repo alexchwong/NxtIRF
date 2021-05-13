@@ -347,10 +347,10 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
     getline(gz_in.iss, myLine, '\n');
     getline(gz_in.iss, myBuffer, '#');
 
-  JunctionCount oJuncCount;
-  std::istringstream inJuncCount;
-  inJuncCount.str(myBuffer);
-  oJuncCount.loadRef(inJuncCount);
+  // JunctionCount oJuncCount;
+  // std::istringstream inJuncCount;
+  // inJuncCount.str(myBuffer);
+  // oJuncCount.loadRef(inJuncCount);
 
 	// Ensure valid reference termination:
 		getline(gz_in.iss, myLine, '\n');    
@@ -363,8 +363,8 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   
   BAM2blocks BB;
   
-  BB.registerCallbackChrMappingChange( std::bind(&JunctionCount::ChrMapUpdate, &oJuncCount, std::placeholders::_1) );
-  BB.registerCallbackProcessBlocks( std::bind(&JunctionCount::ProcessBlocks, &oJuncCount, std::placeholders::_1) );
+  // BB.registerCallbackChrMappingChange( std::bind(&JunctionCount::ChrMapUpdate, &oJuncCount, std::placeholders::_1) );
+  // BB.registerCallbackProcessBlocks( std::bind(&JunctionCount::ProcessBlocks, &oJuncCount, std::placeholders::_1) );
   
   BB.registerCallbackChrMappingChange( std::bind(&FragmentsInChr::ChrMapUpdate, &oFragmentsInChr, std::placeholders::_1) );
   BB.registerCallbackProcessBlocks( std::bind(&FragmentsInChr::ProcessBlocks, &oFragmentsInChr, std::placeholders::_1) );
@@ -421,10 +421,10 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   outGZ.writestring(myLine);
   outGZ.writeline("");
 
-  int directionality = oJuncCount.Directional(myLine);
-  outGZ.writeline("Directionality\tValue");
-  outGZ.writestring(myLine);
-  outGZ.writeline("");
+  // int directionality = oJuncCount.Directional(myLine);
+  // outGZ.writeline("Directionality\tValue");
+  // outGZ.writestring(myLine);
+  // outGZ.writeline("");
 
 // Generate output but save this to strings:
 std::string myLine_ROI;
@@ -436,13 +436,13 @@ std::string myLine_Dir;
 std::string myLine_QC;
 
   oFragmentsInROI.WriteOutput(myLine_ROI, myLine_QC);
-	oJuncCount.WriteOutput(myLine_JC, myLine_QC);
+	// oJuncCount.WriteOutput(myLine_JC, myLine_QC);
 	oSpansPoint.WriteOutput(myLine_SP, myLine_QC);
 	oFragmentsInChr.WriteOutput(myLine_Chr, myLine_QC);
-	oCoverageBlocks.WriteOutput(myLine_ND, myLine_QC, oJuncCount, oSpansPoint, oFragMap);
-  if (directionality != 0) {
-    oCoverageBlocks.WriteOutput(myLine_Dir, myLine_QC, oJuncCount, oSpansPoint, oFragMap, directionality); // Directional.
-	}
+	// oCoverageBlocks.WriteOutput(myLine_ND, myLine_QC, oJuncCount, oSpansPoint, oFragMap);
+  // if (directionality != 0) {
+    // oCoverageBlocks.WriteOutput(myLine_Dir, myLine_QC, oJuncCount, oSpansPoint, oFragMap, directionality); // Directional.
+	// }
 
   outGZ.writeline("QC\tValue");
   outGZ.writestring(myLine_QC);
