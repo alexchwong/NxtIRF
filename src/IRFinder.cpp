@@ -467,10 +467,10 @@ std::string myLine_QC;
   outGZ.writestring(myLine_ND);
   outGZ.writeline("");
   
-  if (directionality != 0) {
-    outGZ.writestring(myLine_Dir);
-    outGZ.writeline("");
-  }
+  // if (directionality != 0) {
+    // outGZ.writestring(myLine_Dir);
+    // outGZ.writeline("");
+  // }
   outGZ.flush(true);
   out.flush(); out.close();
   
