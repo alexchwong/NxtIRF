@@ -312,7 +312,7 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
     // int ret = gz_in.LoadGZ(reference_file, true);
 		// if(ret != 0) return(-1);
 		
-    // std::string myLine;
+    std::string myLine;
     // std::string myBuffer;
     
     // getline(gz_in.iss, myLine, '#');    // discard first >
