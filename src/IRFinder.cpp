@@ -363,7 +363,7 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   
   // FragmentsMap oFragMap;
   
-  // BAM2blocks BB;
+  BAM2blocks BB;
   
   BB.registerCallbackChrMappingChange( std::bind(&JunctionCount::ChrMapUpdate, &oJuncCount, std::placeholders::_1) );
   BB.registerCallbackProcessBlocks( std::bind(&JunctionCount::ProcessBlocks, &oJuncCount, std::placeholders::_1) );
