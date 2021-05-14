@@ -931,12 +931,18 @@ FragmentsInChr::~FragmentsInChr() {
 }
 
 FragmentsMap::~FragmentsMap() {
-  chrName_vec[0].clear();
-  chrName_vec[1].clear();
-  chrName_vec[2].clear();
-  temp_chrName_vec[0].clear();
-  temp_chrName_vec[1].clear();
-  temp_chrName_vec[2].clear();
+  for(unsigned int j = 0; j < 3; j++) {
+    for (auto itChr=temp_chrName_vec[j].begin(); itChr!=temp_chrName_vec[j].end(); itChr++) {
+      std::vector< std::pair<unsigned int, int> > empty_swap_vector;
+      itChr->second.swap(empty_swap_vector);
+    }
+    temp_chrName_vec[j].clear();
+    for (auto itChr=chrName_vec[j].begin(); itChr!=chrName_vec[j].end(); itChr++) {
+      std::vector< std::pair<unsigned int, int> > empty_swap_vector;
+      itChr->second.swap(empty_swap_vector);
+    }
+    chrName_vec[j].clear();    
+  }
 }
 
 
