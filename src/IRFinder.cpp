@@ -361,7 +361,7 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   
   gz_in.closeGZ();
   
-  // FragmentsMap oFragMap;
+  FragmentsMap oFragMap;
   
   BAM2blocks BB;
   
