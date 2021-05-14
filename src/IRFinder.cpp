@@ -308,58 +308,58 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
 		}
 
     
-    GZReader gz_in;
-    int ret = gz_in.LoadGZ(reference_file, true);
-		if(ret != 0) return(-1);
+    // GZReader gz_in;
+    // int ret = gz_in.LoadGZ(reference_file, true);
+		// if(ret != 0) return(-1);
 		
-    std::string myLine;
-    std::string myBuffer;
+    // std::string myLine;
+    // std::string myBuffer;
     
-    getline(gz_in.iss, myLine, '#');    // discard first >
-    getline(gz_in.iss, myLine, '\n');   // ignore file names for now
+    // getline(gz_in.iss, myLine, '#');    // discard first >
+    // getline(gz_in.iss, myLine, '\n');   // ignore file names for now
 		
-    getline(gz_in.iss, myBuffer, '#');  // this is the data block for ref-cover.bed
+    // getline(gz_in.iss, myBuffer, '#');  // this is the data block for ref-cover.bed
 
-  CoverageBlocksIRFinder oCoverageBlocks;
-  std::istringstream inCoverageBlocks;
-  inCoverageBlocks.str(myBuffer);
-  oCoverageBlocks.loadRef(inCoverageBlocks);
+  // CoverageBlocksIRFinder oCoverageBlocks;
+  // std::istringstream inCoverageBlocks;
+  // inCoverageBlocks.str(myBuffer);
+  // oCoverageBlocks.loadRef(inCoverageBlocks);
 
-    getline(gz_in.iss, myLine, '\n');
-    getline(gz_in.iss, myBuffer, '#');
+    // getline(gz_in.iss, myLine, '\n');
+    // getline(gz_in.iss, myBuffer, '#');
 
-  SpansPoint oSpansPoint;
-  oSpansPoint.setSpanLength(5,4);
-  std::istringstream inSpansPoint;
-  inSpansPoint.str(myBuffer);
-  oSpansPoint.loadRef(inSpansPoint);
+  // SpansPoint oSpansPoint;
+  // oSpansPoint.setSpanLength(5,4);
+  // std::istringstream inSpansPoint;
+  // inSpansPoint.str(myBuffer);
+  // oSpansPoint.loadRef(inSpansPoint);
 
-    getline(gz_in.iss, myLine, '\n');
-    getline(gz_in.iss, myBuffer, '#');
+    // getline(gz_in.iss, myLine, '\n');
+    // getline(gz_in.iss, myBuffer, '#');
   
-  FragmentsInROI oFragmentsInROI;
-  FragmentsInChr oFragmentsInChr;
+  // FragmentsInROI oFragmentsInROI;
+  // FragmentsInChr oFragmentsInChr;
 
-    std::istringstream inFragmentsInROI;
-    inFragmentsInROI.str(myBuffer);
-    oFragmentsInROI.loadRef(inFragmentsInROI);
+    // std::istringstream inFragmentsInROI;
+    // inFragmentsInROI.str(myBuffer);
+    // oFragmentsInROI.loadRef(inFragmentsInROI);
 
-    getline(gz_in.iss, myLine, '\n');
-    getline(gz_in.iss, myBuffer, '#');
+    // getline(gz_in.iss, myLine, '\n');
+    // getline(gz_in.iss, myBuffer, '#');
 
-  JunctionCount oJuncCount;
-  std::istringstream inJuncCount;
-  inJuncCount.str(myBuffer);
-  oJuncCount.loadRef(inJuncCount);
+  // JunctionCount oJuncCount;
+  // std::istringstream inJuncCount;
+  // inJuncCount.str(myBuffer);
+  // oJuncCount.loadRef(inJuncCount);
 
 	// Ensure valid reference termination:
-		getline(gz_in.iss, myLine, '\n');    
-		if(strncmp(myLine.c_str(), refEOF, 4) != 0) {
-			Rcout << "Invalid IRFinder reference detected\n";
-			return(0);
-		}
+		// getline(gz_in.iss, myLine, '\n');    
+		// if(strncmp(myLine.c_str(), refEOF, 4) != 0) {
+			// Rcout << "Invalid IRFinder reference detected\n";
+			// return(0);
+		// }
   
-  gz_in.closeGZ();
+  // gz_in.closeGZ();
   
   FragmentsMap oFragMap;
   
