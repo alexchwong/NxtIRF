@@ -397,10 +397,11 @@ unsigned int BAMReader_Multi::ProfileBAM(
   
   Progress p(temp_begins.size(), verbose);
   
-  while(read_from_file(100) > 0) {
+  while(read_from_file(10000) > 0) {
     p.increment(comp_buffer_count - buffer_count);
+    Rcout << "Decompressing...";
     decompress(true);
-    
+    Rcout << "done\n";
     if(buffer.at(buffer_pos).GetPos() > 0) {
       // Rcout << "Trying to go to the beginning of next buffer\n";
       if(!GotoNextRead(false)) break; // goes to the first full read of the next line     
