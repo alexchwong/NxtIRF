@@ -441,7 +441,7 @@ int IRF_core(std::string const &bam_file,
     int ret2 = 0;
     while(!BRchild.at(i)->eob() && !p.check_abort() && n_blocks_read > 0 && ret == 0) {
       #pragma omp critical
-      n_blocks_read = (unsigned int)BRchild.at(i)->read_from_file(1000);
+      n_blocks_read = (unsigned int)BRchild.at(i)->read_from_file(100);
       
       if(n_blocks_read > 0) {
         BRchild.at(i)->decompress();
