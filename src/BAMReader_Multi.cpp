@@ -119,6 +119,12 @@ int buffer_chunk::decompress() {
   return(0);
 }
 
+uint32_t * buffer_chunk::glean_uint_32() {  
+  if(GetRemainingBytes() < 4) return(NULL);
+
+  return((uint32_t *)decompressed_buffer + pos);
+}
+
 unsigned int buffer_chunk::peek(char * dest, unsigned int len) {  
   if(!is_decompressed()) return(0);
   if(pos >= max_decompressed) return(0);
@@ -701,11 +707,11 @@ bool BAMReader_Multi::GotoNextRead(bool strict) {
     if(buffer_pos >= buffer_count) return(false);
     if(buffer.at(buffer_pos).GetRemainingBytes() < 4) return(false);
     
-    stream_uint32 u32;
-    buffer.at(buffer_pos).peek(u32.c, 4);
-    if(buffer.at(buffer_pos).GetRemainingBytes() <= 4 + u32.u) return(false);
+    uint32_t * u32 = buffer.at(buffer_pos).glean_uint_32();
+    // buffer.at(buffer_pos).peek(u32.c, 4);
+    if(buffer.at(buffer_pos).GetRemainingBytes() <= 4 + *u32) return(false);
     
-    ignore(4 + u32.u);
+    ignore(4 + *u32);
     return(true);
   } else {
     if(buffer_pos >= buffer_count) return(false);
@@ -713,25 +719,24 @@ bool BAMReader_Multi::GotoNextRead(bool strict) {
       // cautious
       if(buffer.at(buffer_pos).GetRemainingBytes() < 4) return(false);
 
-      stream_uint32 u32;
-      buffer.at(buffer_pos).peek(u32.c, 4);
-      if(buffer.at(buffer_pos).GetRemainingBytes() <= 4 + u32.u) return(false);
-      ignore(4 + u32.u);
+      uint32_t * u32 = buffer.at(buffer_pos).glean_uint_32();
+      // buffer.at(buffer_pos).peek(u32.c, 4);
+      if(buffer.at(buffer_pos).GetRemainingBytes() <= 4 + *u32) return(false);
+      ignore(4 + *u32);
       return(true);
     } else if(buffer_pos < buffer_count - 1) {
       // Doable:
-      stream_uint32 u32;
-      if(read(u32.c, 4) < 4) Rcout << "Unable to read 4 bytes when supposed to\n";
-      if(ignore(u32.u) < u32.u) Rcout << "Unable to read rest of read when supposed to\n";
+      uint32_t * u32 = buffer.at(buffer_pos).glean_uint_32();
+      ignore(4 + *u32);
       return(true);
     } else {
       if(buffer.at(buffer_pos).GetRemainingBytes() < 4) return(false);
 
-      stream_uint32 u32;
-      buffer.at(buffer_pos).peek(u32.c, 4);
-      if(buffer.at(buffer_pos).GetRemainingBytes() <= 4 + u32.u) return(false);
+      uint32_t * u32 = buffer.at(buffer_pos).glean_uint_32();
+      // buffer.at(buffer_pos).peek(u32.c, 4);
+      if(buffer.at(buffer_pos).GetRemainingBytes() <= 4 + *u32) return(false);
 
-      ignore(4 + u32.u);
+      ignore(4 + *u32);
       return(true);
     }
   }
