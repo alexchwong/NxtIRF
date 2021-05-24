@@ -26,16 +26,17 @@ class buffer_chunk {
 
     bool is_decompressed() { return(decompressed); };
     bool is_at_end() { return(decompressed && pos == max_decompressed); };
-    bool is_eof_block() { 
-      return(max_buffer == 10);
-      // return(decompressed && max_decompressed == 0); 
-    }
+    bool is_eof_block() { return(max_buffer == 10); };
     
     unsigned int GetPos() { return(pos); };
     unsigned int GetRemainingBytes() { return(max_decompressed - pos); };
     unsigned int GetBGZFPos() { return(bgzf_pos); };
     unsigned int SetPos(unsigned int pos_to_set) {
-      pos = pos_to_set;
+      if(pos_to_set > max_decompressed) {
+        pos = max_decompressed;
+      } else {
+        pos = pos_to_set;
+      }
       return(pos); 
     };
     unsigned int SetBGZFPos(size_t pos_to_set) { 
@@ -69,7 +70,7 @@ class BAMReader_Multi {
     int IS_FAIL;
     size_t IS_LENGTH;
     size_t BAM_READS_BEGIN;
-    
+    unsigned int BAM_READS_BEGIN_BYTE_OFFSET = 0;
     size_t BAM_BLOCK_CURSOR;
     
     std::vector<buffer_chunk> buffer;
@@ -91,7 +92,8 @@ class BAMReader_Multi {
     BAMReader_Multi(uint64_t block_begin, unsigned int begin_offset,
       uint64_t block_end, unsigned int end_offset);
     ~BAMReader_Multi();
-
+    void clearAllBuffers();
+    
     void AssignTask(std::istream *in_stream, uint64_t block_begin, unsigned int begin_offset,
       uint64_t block_end, unsigned int end_offset);
     void SetAutoLoad(bool autoload) {auto_load_data = autoload;};

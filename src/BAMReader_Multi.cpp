@@ -46,20 +46,16 @@ int buffer_chunk::read_from_file(istream * IN) {
   IN->read(GzipCheck, 16);
 
   if(IN->fail()) {
-    // likely just EOF
-    return(-1);
+    return(-1); // likely just EOF
   } else if(IN->eof()) {
-    // IS_EOF = 1;
     return(1);
   }
 
   IN->read(u16.c, 2);
 
   max_buffer = u16.u + 1 - 2  - 16;
-  // Rcout << "BGZF block " << max_buffer << " bytes";
   buffer = (char*)malloc(max_buffer + 1);
   IN->read(buffer, max_buffer);
-  // Rcout << " read\n";
 
   return(0);
 }
@@ -85,14 +81,14 @@ int buffer_chunk::decompress() {
 
     int ret = inflateInit2(&zs, -15);
     if(ret != Z_OK) {
-        std::ostringstream oss;
+        // std::ostringstream oss;
         Rcout << "Exception during BAM decompression - inflateInit2() fail: (" << ret << ") "
           << ", bgzf pos = " << GetBGZFPos() << '\n';
         return(ret);
     }
     ret = inflate(&zs, Z_FINISH);
     if(ret != Z_OK && ret != Z_STREAM_END) {
-        std::ostringstream oss;
+        // std::ostringstream oss;
         Rcout << "Exception during BAM decompression - inflate() fail: (" << ret << ") "
           << ", bgzf pos = " << GetBGZFPos() << '\n';
         return(ret);
@@ -104,26 +100,25 @@ int buffer_chunk::decompress() {
     // Don't really need to deallocate decompressed_buffer, as long as we know the real max
 
     // Rcout << "BGZF block " << max_decompressed << " bytes decompressed\n";
-
     uint32_t crc = crc32(crc32(0L, NULL, 0L), (Bytef*)decompressed_buffer, max_decompressed);
     if(crc_check != crc) {
-        std::ostringstream oss;
+        // std::ostringstream oss;
         Rcout << "CRC fail during BAM decompression" << ", bgzf pos = " << GetBGZFPos() << '\n';
         return(ret);
     }
     // pos = 0;
     if(end_pos < max_decompressed) max_decompressed = end_pos;
   } else {
-    decompressed = true;
+    decompressed = true; max_decompressed = 0;
   }
   return(0);
 }
 
 unsigned int buffer_chunk::peek(char * dest, unsigned int len) {  
   if(!is_decompressed()) return(0);
-  if(pos >= max_decompressed) return(0);
+  if(GetRemainingBytes() == 0) return(0);
   
-  unsigned int bytes_to_read = min(max_decompressed, pos + len) - pos;
+  unsigned int bytes_to_read = min(len, GetRemainingBytes());
   memcpy(dest, decompressed_buffer + pos, bytes_to_read);
   // pos += bytes_to_read;
   return(bytes_to_read);
@@ -131,9 +126,9 @@ unsigned int buffer_chunk::peek(char * dest, unsigned int len) {
 
 unsigned int buffer_chunk::read(char * dest, unsigned int len) {  
   if(!is_decompressed()) return(0);
-  if(pos >= max_decompressed) return(0);
+  if(GetRemainingBytes() == 0) return(0);
   
-  unsigned int bytes_to_read = min(max_decompressed, pos + len) - pos;
+  unsigned int bytes_to_read = min(len, GetRemainingBytes());
   memcpy(dest, decompressed_buffer + pos, bytes_to_read);
   pos += bytes_to_read;
   return(bytes_to_read);
@@ -141,10 +136,10 @@ unsigned int buffer_chunk::read(char * dest, unsigned int len) {
 
 unsigned int buffer_chunk::ignore(unsigned int len) {  
   if(!is_decompressed()) return(0);
-  if(pos >= max_decompressed) return(0);
+  if(GetRemainingBytes() == 0) return(0);
   if(len == 0) return(0);
 
-  unsigned int bytes_to_read = min(max_decompressed, pos + len) - pos;
+  unsigned int bytes_to_read = min(len, GetRemainingBytes());
   // memcpy(decompressed_buffer, decompressed_buffer + pos, bytes_to_read);
   pos += bytes_to_read;
   return(bytes_to_read);  
@@ -211,6 +206,19 @@ BAMReader_Multi::~BAMReader_Multi() {
   }
 }
 
+void BAMReader_Multi::clearAllBuffers() {
+  if(buffer.size() > 0) {
+    for(unsigned int i = 0; i < buffer.size(); i++) {
+      buffer.at(i).clear_buffer();
+    }
+  }
+  buffer.resize(0);
+  buffer_pos = 0;
+  IS_EOF = 0;
+  IS_EOB = 0;
+  IS_FAIL = 0;
+}
+
 void BAMReader_Multi::SetInputHandle(std::istream *in_stream) {
 	IN = in_stream;
   //  get length of file:
@@ -227,7 +235,8 @@ unsigned int BAMReader_Multi::readBamHeader(
     std::vector<unsigned int> &read_offsets,
     bool verbose,
     unsigned int n_workers) {
-  char buffer[1000];
+      
+  char buffer_str[1000];
   std::string chrName;
 
   bam_header bamhead;
@@ -245,8 +254,8 @@ unsigned int BAMReader_Multi::readBamHeader(
 
   for (unsigned int i = 0; i < n_chr; i++) {
     read(i32.c ,4);
-    read(buffer , i32.i);
-    chrName = string(buffer, i32.i-1);
+    read(buffer_str , i32.i);
+    chrName = string(buffer_str, i32.i-1);
     read(i32.c ,4);
     chrs.push_back(chr_entry(i, chrName, i32.i));
   }
@@ -255,6 +264,10 @@ unsigned int BAMReader_Multi::readBamHeader(
   if(buffer_pos == comp_buffer_count) {
     BAM_READS_BEGIN = tellg();
     BAM_BLOCK_CURSOR = BAM_READS_BEGIN;
+  } else {
+    BAM_READS_BEGIN = buffer.at(buffer_pos).GetBGZFPos();
+    BAM_BLOCK_CURSOR = BAM_READS_BEGIN;
+    BAM_READS_BEGIN_BYTE_OFFSET = buffer.at(buffer_pos).GetPos();
   }
   
   return(ProfileBAM(block_begins, read_offsets, verbose, n_workers));
@@ -319,26 +332,22 @@ unsigned int BAMReader_Multi::ProfileBAM(
   std::vector<uint64_t> temp_begins;
   std::vector<unsigned int> temp_last_read_offsets;
   stream_uint32 u32;
-  // unsigned int bytes_read;
 
   // scan file to obtain a list of bgzf offsets
-  int ret = getBGZFstarts(temp_begins);
-  if(ret != 0) {
-    return(0);
-  }
+  if(getBGZFstarts(temp_begins) != 0) return(0);
+
   // assign n blocks to check if they are self-contained bgzf (i.e. they start and end at read boundary)
   unsigned int divisor = (temp_begins.size()/ target_n_threads);
   unsigned int i = 0;
-  // Rcout << "temp_begins.size() == " << temp_begins.size() <<
-    // " target_n_threads " << target_n_threads <<
-    // " divisor " << divisor << '\n';
-  // if(verbose) Rcout << "Checking whether bgzf blocks contain whole number of reads\n";
+
   while(i < temp_begins.size() && block_begins.size() < target_n_threads) {
     block_begins.push_back(temp_begins.at(i));
-    // Rcout << "block " << temp_begins.at(i) << '\t';
-    read_offsets.push_back(0);
+    if(i == 0 && BAM_READS_BEGIN_BYTE_OFFSET > 0) {
+      read_offsets.push_back(BAM_READS_BEGIN_BYTE_OFFSET);
+    } else {
+      read_offsets.push_back(0);
+    }
     i+=divisor;
-    // Rcout << '\n';
   }
   bool is_self_contained = true;
   
@@ -358,9 +367,9 @@ unsigned int BAMReader_Multi::ProfileBAM(
     temp_buffer->decompress();
     
     if(!temp_buffer->is_eof_block()) {
-      while(temp_buffer->GetMaxBufferDecompressed() - temp_buffer->GetPos() > 36) {
+      while(temp_buffer->GetRemainingBytes() > 36) {
         temp_buffer->read(u32.c, 4);
-        if(u32.u <= temp_buffer->GetMaxBufferDecompressed() - temp_buffer->GetPos()) {
+        if(u32.u <= temp_buffer->GetRemainingBytes()) {
           temp_buffer->ignore(u32.u);
         } else {
           break;
@@ -370,13 +379,12 @@ unsigned int BAMReader_Multi::ProfileBAM(
         is_self_contained = false;
       }
     }
-
     delete temp_buffer;
     if(!is_self_contained) break;
   }
+  
   if(is_self_contained) {
     if(verbose) Rcout << "BAM is self contained\n";
-  // if so, exit with these n blocks (where n == target_n_threads)
     // push EOF
     block_begins.push_back(temp_begins.at(temp_begins.size() - 1));
     read_offsets.push_back(0);
@@ -394,29 +402,34 @@ unsigned int BAMReader_Multi::ProfileBAM(
   SetAutoLoad(false);
   IN->seekg (BAM_READS_BEGIN, std::ios_base::beg);
   BAM_BLOCK_CURSOR = BAM_READS_BEGIN;
+
+  // Sets the cursor to the right position to begin reading
+  begin_block_offset = BAM_READS_BEGIN;
+  begin_read_offset = BAM_READS_BEGIN_BYTE_OFFSET;
+
+  clearAllBuffers();  
   
   Progress p(temp_begins.size(), verbose);
   
   while(read_from_file(100) > 0) {
     p.increment(comp_buffer_count - buffer_count);
-    decompress(true);
+    decompress(true);   // true here means use multi-threading where available
     
-    if(buffer.at(buffer_pos).GetPos() > 0) {
-      // Rcout << "Trying to go to the beginning of next buffer\n";
-      if(!GotoNextRead(false)) break; // goes to the first full read of the next line     
-    }
-    // Rcout << "BGZF# " << buffer_pos << '\t';
-    // Rcout << "Block read offset " << buffer.at(buffer_pos).GetPos() << '\n';
+    if(buffer.at(buffer_pos).GetBGZFPos() > BAM_READS_BEGIN) {
+      if(buffer.at(buffer_pos).GetPos() > 0) {
+        // In this position, we are at the end of the previous buffer
+        if(!GotoNextRead(false)) break; // goes to the first full read of the next line     
+      }
+    }   // because if first buffer, ignore offset - it's intentional
     temp_last_read_offsets.push_back(buffer.at(buffer_pos).GetPos()); // Gets current position of current buffer
     
     while(isReadable()) {
       while(1) {
-        // strict step onto next read
-        if(!GotoNextRead(true)) break;
+        if(!GotoNextRead(true)) break; // strict step onto next read until end of bgzf
       }
 
-      // If ends at full read, ignore() automatically goes to pos zero of next buffer
       if(buffer.at(buffer_pos).GetPos() == 0) {   
+      // If ends at full read, ignore() automatically goes to pos=0 of next buffer
         if(isReadable()) {
           temp_last_read_offsets.push_back(0); 
           // Rcout << "BGZF# " << buffer_pos << '\t';
