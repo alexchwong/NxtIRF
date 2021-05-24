@@ -397,7 +397,7 @@ unsigned int BAMReader_Multi::ProfileBAM(
   
   Progress p(temp_begins.size(), verbose);
   
-  while(read_from_file(100) > 0) {
+  while(read_from_file(1000 * target_n_threads) > 0) {
     p.increment(comp_buffer_count - buffer_count);
     decompress(true);
     
