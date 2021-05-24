@@ -433,6 +433,7 @@ int IRF_core(std::string const &bam_file,
   // Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
   unsigned int blocks_read_total = 0;
   int ret = 0;
+  unsigned int first_cab = 0;
 #ifdef _OPENMP
   #pragma omp parallel for
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
@@ -446,8 +447,8 @@ int IRF_core(std::string const &bam_file,
         BRchild.at(i)->decompress();
         ret2 = BBchild.at(i)->processAll();
         
+        #pragma omp critical
         if(ret2 == -1) {
-          #pragma omp critical
           ret = -1;    // abort if broken reads detected
         }
         
@@ -458,6 +459,19 @@ int IRF_core(std::string const &bam_file,
         p.increment(n_blocks_read);
       }
       // Rcout << "Blocks read: " << n_blocks_read << '\n';
+    }
+    #pragma omp critical
+    if(first_cab == 0) {
+      first_cab = i;
+    } else {
+      oJC.at(first_cab)->Combine(*oJC.at(i));
+      oChr.at(first_cab)->Combine(*oChr.at(i));
+      oSP.at(first_cab)->Combine(*oSP.at(i));
+      oROI.at(first_cab)->Combine(*oROI.at(i));
+      oCB.at(first_cab)->Combine(*oCB.at(i));
+      oFM.at(first_cab)->Combine(*oFM.at(i));
+      
+      BBchild.at(first_cab)->processSpares(*BBchild.at(i));
     }
   }
 #else
@@ -499,32 +513,36 @@ int IRF_core(std::string const &bam_file,
     if(verbose) Rcout << "Compiling data from threads\n";
   // Combine BB's and process spares
     for(unsigned int i = 1; i < n_threads_to_use; i++) {
-      BBchild.at(0)->processSpares(*BBchild.at(i));
-      delete BBchild.at(i);
-      delete BRchild.at(i);
+      // BBchild.at(0)->processSpares(*BBchild.at(i));
+      if(i != first_cab) {
+        delete BBchild.at(i);
+        delete BRchild.at(i);
+      }
+
     }
   // Combine objects:
     for(unsigned int i = 1; i < n_threads_to_use; i++) {
-      oJC.at(0)->Combine(*oJC.at(i));
-      oChr.at(0)->Combine(*oChr.at(i));
-      oSP.at(0)->Combine(*oSP.at(i));
-      oROI.at(0)->Combine(*oROI.at(i));
-      oCB.at(0)->Combine(*oCB.at(i));
-      oFM.at(0)->Combine(*oFM.at(i));
-      
-      delete oJC.at(i);
-      delete oChr.at(i);
-      delete oSP.at(i);
-      delete oROI.at(i);
-      delete oCB.at(i);
-      delete oFM.at(i);
+      // oJC.at(0)->Combine(*oJC.at(i));
+      // oChr.at(0)->Combine(*oChr.at(i));
+      // oSP.at(0)->Combine(*oSP.at(i));
+      // oROI.at(0)->Combine(*oROI.at(i));
+      // oCB.at(0)->Combine(*oCB.at(i));
+      // oFM.at(0)->Combine(*oFM.at(i));
+      if(i != first_cab) {
+        delete oJC.at(i);
+        delete oChr.at(i);
+        delete oSP.at(i);
+        delete oROI.at(i);
+        delete oCB.at(i);
+        delete oFM.at(i);
+      }
     }
   }
 
   // Write Coverage Binary file:
   std::ofstream ofCOV;                          ofCOV.open(s_output_cov, std::ofstream::binary);  
   covWriter outCOV;                             outCOV.SetOutputHandle(&ofCOV);
-  oFM.at(0)->WriteBinary(&outCOV, verbose);     ofCOV.close();
+  oFM.at(first_cab)->WriteBinary(&outCOV, verbose);     ofCOV.close();
 
 // Write output to file:  
 	if(verbose) Rcout << "Writing output file\n";
@@ -533,10 +551,10 @@ int IRF_core(std::string const &bam_file,
   GZWriter outGZ;                               outGZ.SetOutputHandle(&out); // GZ compression
 
 // Write stats here:
-  BBchild.at(0)->WriteOutput(myLine);
+  BBchild.at(first_cab)->WriteOutput(myLine);
   outGZ.writeline("BAM_report\tValue"); outGZ.writestring(myLine); outGZ.writeline("");
 
-  int directionality = oJC.at(0)->Directional(myLine);
+  int directionality = oJC.at(first_cab)->Directional(myLine);
   outGZ.writeline("Directionality\tValue"); outGZ.writestring(myLine); outGZ.writeline("");
 
   // Generate output but save this to strings:
@@ -549,18 +567,18 @@ int IRF_core(std::string const &bam_file,
   std::string myLine_QC;
   
   // Rcout << "Writing ROIs\n";
-  oROI.at(0)->WriteOutput(myLine_ROI, myLine_QC);
+  oROI.at(first_cab)->WriteOutput(myLine_ROI, myLine_QC);
   // Rcout << "Writing Juncs\n";
-	oJC.at(0)->WriteOutput(myLine_JC, myLine_QC);
+	oJC.at(first_cab)->WriteOutput(myLine_JC, myLine_QC);
   // Rcout << "Writing Spans\n";
-	oSP.at(0)->WriteOutput(myLine_SP, myLine_QC);
+	oSP.at(first_cab)->WriteOutput(myLine_SP, myLine_QC);
   // Rcout << "Writing Chrs\n";
-	oChr.at(0)->WriteOutput(myLine_Chr, myLine_QC);
+	oChr.at(first_cab)->WriteOutput(myLine_Chr, myLine_QC);
   // Rcout << "Writing CoverageBlocks\n";
-	oCB.at(0)->WriteOutput(myLine_ND, myLine_QC, *oJC.at(0), *oSP.at(0), *oFM.at(0), n_threads_to_use);
+	oCB.at(first_cab)->WriteOutput(myLine_ND, myLine_QC, *oJC.at(first_cab), *oSP.at(first_cab), *oFM.at(first_cab), n_threads_to_use);
   if (directionality != 0) {
     // Rcout << "Writing Stranded CoverageBlocks\n";
-    oCB.at(0)->WriteOutput(myLine_Dir, myLine_QC, *oJC.at(0), *oSP.at(0), *oFM.at(0), n_threads_to_use, directionality); // Directional.
+    oCB.at(first_cab)->WriteOutput(myLine_Dir, myLine_QC, *oJC.at(first_cab), *oSP.at(first_cab), *oFM.at(first_cab), n_threads_to_use, directionality); // Directional.
 	}
 
   outGZ.writeline("QC\tValue"); outGZ.writestring(myLine_QC); outGZ.writeline("");
@@ -587,14 +605,14 @@ int IRF_core(std::string const &bam_file,
   
   // destroy objects:
 
-  delete oJC.at(0);
-  delete oChr.at(0);
-  delete oSP.at(0);
-  delete oROI.at(0);
-  delete oCB.at(0);
-  delete oFM.at(0);
-  delete BRchild.at(0);
-  delete BBchild.at(0);
+  delete oJC.at(first_cab);
+  delete oChr.at(first_cab);
+  delete oSP.at(first_cab);
+  delete oROI.at(first_cab);
+  delete oCB.at(first_cab);
+  delete oFM.at(first_cab);
+  delete BRchild.at(first_cab);
+  delete BBchild.at(first_cab);
 
   return(0);
 }
