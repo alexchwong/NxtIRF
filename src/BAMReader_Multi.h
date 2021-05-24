@@ -54,7 +54,6 @@ class buffer_chunk {
     unsigned int read(char * dest, unsigned int len);  // returns the number of bytes actually read
     unsigned int peek(char * dest, unsigned int len);  // same as read but does not move cursor
     unsigned int ignore(unsigned int len);
-    uint32_t * glean_uint_32();
 };
 
 class BAMReader_Multi {
