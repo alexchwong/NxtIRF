@@ -4,7 +4,7 @@
         reference_path = "./Reference", 
         bamfiles = "Unsorted.bam", 
         output_files = "./Sample",
-        max_threads = max(parallel::detectCores() - 2, 1),
+        max_threads = parallel::detectCores(),
         Use_OpenMP = TRUE,
         run_featureCounts = FALSE,
         overwrite_IRFinder_output = FALSE,
@@ -150,7 +150,7 @@
 
 
 .irfinder_validate_args <- function(s_bam, s_ref, max_threads, output_files) {
-    if(max_threads != 1 && max_threads > parallel::detectCores() - 1) {
+    if(max_threads != 1 && max_threads > parallel::detectCores()) {
         .log(paste("In .run_IRFinder(), ",
             max_threads, " threads is not allowed for this system"))
     }
