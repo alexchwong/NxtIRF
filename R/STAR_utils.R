@@ -65,13 +65,13 @@
 #' # 1) Reference generation from Ensembl's FTP links
 #' #     Additionally generates reads for Mappability calculation
 #' 
-#' FTP = "ftp://ftp.ensembl.org/pub/release-94/"
+#' FTP = "ftp://ftp.ensembl.org/pub/release-103/"
 #' GetReferenceResource(
 #'     reference_path = "./Reference_FTP",
 #'     fasta = paste0(FTP, "fasta/homo_sapiens/dna/",
 #'         "Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"), 
 #'     gtf = paste0(FTP, "gtf/homo_sapiens/",
-#'         "Homo_sapiens.GRCh38.94.chr.gtf.gz"), 
+#'         "Homo_sapiens.GRCh38.94.gtf.gz"), 
 #'     generate_mappability_reads = TRUE
 #' )
 #' 
