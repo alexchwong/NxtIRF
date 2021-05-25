@@ -4,7 +4,7 @@ test_that("NxtIRF OpenMP produces same output regardless of threads", {
         message("NxtIRF was compiled without OpenMP")
         return(TRUE)
     }
-    n_threads = min(8, parallel::detectCores())
+    n_threads = min(2, parallel::detectCores())
     if(n_threads == 1) {
         message("Only 1 OpenMP processor available")
         return(TRUE)
