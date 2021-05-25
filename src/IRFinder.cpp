@@ -377,6 +377,9 @@ int IRF_core(std::string const &bam_file,
   if(n_bgzf_blocks == 0) {
     Rcout << "Error occurred profiling BAM file\n";
     return(-1);
+  } else if(n_bgzf_blocks == 1) {
+    if(verbose) Rcout << "BAM is too small for multi-threaded run, using single thread instead\n";
+    n_threads_to_use = 1;
   }
   // Assign children:
   std::vector<CoverageBlocksIRFinder*> oCB;
@@ -460,6 +463,7 @@ int IRF_core(std::string const &bam_file,
       }
       // Rcout << "Blocks read: " << n_blocks_read << '\n';
     }
+/*
     #pragma omp critical
     if(first_cab == 0) {
       first_cab = i;
@@ -473,6 +477,7 @@ int IRF_core(std::string const &bam_file,
       
       BBchild.at(first_cab)->processSpares(*BBchild.at(i));
     }
+*/
   }
 #else
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
@@ -513,29 +518,29 @@ int IRF_core(std::string const &bam_file,
     if(verbose) Rcout << "Compiling data from threads\n";
   // Combine BB's and process spares
     for(unsigned int i = 1; i < n_threads_to_use; i++) {
-      // BBchild.at(0)->processSpares(*BBchild.at(i));
-      if(i != first_cab) {
+      BBchild.at(0)->processSpares(*BBchild.at(i));
+      // if(i != first_cab) {
         delete BBchild.at(i);
         delete BRchild.at(i);
-      }
+      // }
 
     }
   // Combine objects:
     for(unsigned int i = 1; i < n_threads_to_use; i++) {
-      // oJC.at(0)->Combine(*oJC.at(i));
-      // oChr.at(0)->Combine(*oChr.at(i));
-      // oSP.at(0)->Combine(*oSP.at(i));
-      // oROI.at(0)->Combine(*oROI.at(i));
-      // oCB.at(0)->Combine(*oCB.at(i));
-      // oFM.at(0)->Combine(*oFM.at(i));
-      if(i != first_cab) {
+      oJC.at(0)->Combine(*oJC.at(i));
+      oChr.at(0)->Combine(*oChr.at(i));
+      oSP.at(0)->Combine(*oSP.at(i));
+      oROI.at(0)->Combine(*oROI.at(i));
+      oCB.at(0)->Combine(*oCB.at(i));
+      oFM.at(0)->Combine(*oFM.at(i));
+      // if(i != first_cab) {
         delete oJC.at(i);
         delete oChr.at(i);
         delete oSP.at(i);
         delete oROI.at(i);
         delete oCB.at(i);
         delete oFM.at(i);
-      }
+      // }
     }
   }
 

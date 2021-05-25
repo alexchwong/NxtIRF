@@ -1,9 +1,15 @@
 test_that("NxtIRF pipeline reproduces NxtSE object", {
-    bams = NxtIRF_example_bams()
-    BuildReference(
-        fasta = mock_genome(), gtf = mock_gtf(),
-        reference_path = file.path(tempdir(), "Reference")
-    )
+    if(!file.exists(file.path(tempdir(), "02H003.bam"))) {
+        bams = NxtIRF_example_bams()
+    } else {
+        bams = Find_Bams(tempdir())
+    }
+    if(!file.exists(file.path(tempdir(), "Reference", "IRFinder.ref.gz"))) {
+        BuildReference(
+            fasta = mock_genome(), gtf = mock_gtf(),
+            reference_path = file.path(tempdir(), "Reference")
+        )
+    }
     
     # i = 2
     # NxtIRF:::.irfinder_run_single(bams$BAM[i], 
