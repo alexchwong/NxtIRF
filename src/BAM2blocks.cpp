@@ -29,7 +29,7 @@ BAM2blocks::~BAM2blocks() {
 }
 
 unsigned int BAM2blocks::openFile(BAMReader_Multi * _IN, bool verbose, unsigned int n_workers) {
-  // Change for multi-threading:
+  // For multi-threading:
   // Only BBchild processes BAM reads from file input
   // BAM2blocks (parent) reads header, analyses file, and delegates tasks to children
   // - so if running 1 thread, have 1 BAM2blocks and 1 BBchild
@@ -38,10 +38,12 @@ unsigned int BAM2blocks::openFile(BAMReader_Multi * _IN, bool verbose, unsigned 
   // So in IRFinder main, only 1 child reads file buffer at any one time
   // Decompression and read processing runs in parallel
   IN = _IN;
-  return(readBamHeader(block_begins, read_offsets, verbose, n_workers)); // readBamHeader needs to call the ChrMappingChange callbacks.
+  return(readBamHeader(block_begins, read_offsets, verbose, n_workers)); 
+  // readBamHeader needs to call the ChrMappingChange callbacks.
 }
 
 void BAM2blocks::AttachReader(BAMReader_Multi * _IN) {
+  // For BBchildren only
   IN = _IN;
 }
 
@@ -60,6 +62,7 @@ void BAM2blocks::ProvideTask(unsigned int thread_number,
         uint64_t &begin_bgzf, unsigned int &begin_pos,
         uint64_t &end_bgzf, unsigned int &end_pos
 ) {
+  // Tells BBchild where to start and stop reading
   begin_bgzf = block_begins.at(thread_number);
   begin_pos = read_offsets.at(thread_number);
   end_bgzf = block_begins.at(thread_number + 1);
@@ -67,6 +70,7 @@ void BAM2blocks::ProvideTask(unsigned int thread_number,
 }
 
 void BAM2blocks::TransferChrs(BAM2blocks& other) {
+  // Transfers chrs to BBchildren
   for(unsigned int i = 0; i < other.chrs.size(); i++) {
     chrs.push_back(other.chrs.at(i));
   }
@@ -128,16 +132,12 @@ void BAM2blocks::cigar2block(uint32_t * cigar, uint16_t n_cigar_op, std::vector<
 unsigned int BAM2blocks::processPair(bam_read_core * read1, bam_read_core * read2) {
   // R1 is to the left of R2 (or equal starts).
   int r1_genome_len;
-  //int r1_blocks;
   int r2_genome_len;
 
   bam_read_core * r1 = read1;
   bam_read_core * r2 = read2;
   
   string debugstate;
-
-  //int r2_blocks;
-  //char dir;
 
   if (r1->core.flag & 0x40) {
     //this is first of pair.
@@ -326,8 +326,9 @@ int BAM2blocks::WriteOutput(std::string& output) {
 }
 
 bam_read_core *  BAM2blocks::SupplyRead(std::string& read_name) {
-  // Supplies the pointer to the last spare read
+  // Supplies the pointer to the first spare read
   // When called, transfer ownership of read to the parent BB
+  // i.e. it is the parent's responsibility to delete the read pointer
   if(spare_reads->size() == 0) return(NULL);
   auto it = spare_reads->begin();
   read_name = it->first;
@@ -365,7 +366,6 @@ int BAM2blocks::processSpares(BAM2blocks& other) {
       if (spare_read->core.refID != it_read->second->core.refID) {
         cChimericReads += 1;
       } else {
-        // Rcout << "Read matched: " << read_name << '\n';
         if (spare_read->core.pos <= it_read->second->core.pos) {    
           totalNucleotides += processPair(&(*spare_read), &(*(it_read->second)));
         } else{              

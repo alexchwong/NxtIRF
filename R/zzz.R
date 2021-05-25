@@ -1,3 +1,14 @@
+.onLoad <- function(libname, pkgname){
+    n_threads = Has_OpenMP()
+    if(n_threads == 0) {
+        packageStartupMessage("NxtIRF built without OpenMP")
+    } else {
+        n_threads = parallel::detectCores()
+        packageStartupMessage(paste(
+            "NxtIRF built with OpenMP, maximum ", n_threads, "cores"))
+    }
+}
+
 #' NxtIRF Examples
 #'
 #' Contains files that provides a workable example for the 

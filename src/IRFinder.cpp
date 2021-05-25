@@ -9,17 +9,19 @@
 const char refEOF[5] =
 		"\x20\x45\x4f\x46";
 
+// [[Rcpp::export]]
+int Has_OpenMP() {
+#ifdef _OPENMP
+  return omp_get_max_threads();
+#else
+  return 0;
+#endif
+}
+
+
+// COV input/output (R wrapper only)
+
 #ifndef GALAXY
-
-    // [[Rcpp::export]]
-    int Has_OpenMP() {
-    #ifdef _OPENMP
-      return omp_get_max_threads();
-    #else
-      return 0;
-    #endif
-    }
-
 // [[Rcpp::export]]
 bool IRF_Check_Cov(std::string s_in) {
 	// Checks if given file is a valid COV file
@@ -87,17 +89,11 @@ List IRF_RLE_From_Cov(std::string s_in, std::string seqname, int start, int end,
     ref_index++;
   }
   if(ref_index == chrs.size()) {
+    Rcout << seqname << " is not a valid chromosome / seqname in " << s_in << '\n';
     inCov_stream.close();	
     return(NULL_RLE);
   }
-  
-  // auto it_chr = std::find(inCov.chr_names.begin(), inCov.chr_names.end(), seqname);
-  // if(it_chr == inCov.chr_names.end()) {
-		// inCov_stream.close();	
-    // return(NULL_RLE);
-  // } else {
-    // ref_index = distance(inCov.chr_names.begin(), it_chr);
-  // }
+
   // end = 0 implies fetch whole chromosome
   int eff_end = 0;
   if(end == 0) {
@@ -142,11 +138,8 @@ List IRF_RLEList_From_Cov(std::string s_in, int strand) {
   
   List RLEList;
   
-  std::ifstream inCov_stream;
-  inCov_stream.open(s_in, std::ifstream::binary);
-  
-  covReader inCov;
-  inCov.SetInputHandle(&inCov_stream);
+  std::ifstream inCov_stream;               inCov_stream.open(s_in, std::ifstream::binary);
+  covReader inCov;                          inCov.SetInputHandle(&inCov_stream);
 
   if(inCov.fail()){
 		inCov_stream.close();
@@ -155,7 +148,7 @@ List IRF_RLEList_From_Cov(std::string s_in, int strand) {
   
   int ret = inCov.ReadHeader();
   if(ret == -1){
-		Rcout << s_in << " appears to not be valid COV file... exiting";
+		Rcout << s_in << " is not a valid COV file... exiting";
 		inCov_stream.close();	
     return(NULL_RLE);
   }
@@ -186,6 +179,8 @@ List IRF_RLEList_From_Cov(std::string s_in, int strand) {
 
 // [[Rcpp::export]]
 int IRF_gunzip(std::string s_in, std::string s_out) {
+  // Equivalent to gunzip
+  // Used to make sure the GZReader implementation is producing same output as conventional methods
   
   GZReader gz_in;
   int ret = gz_in.LoadGZ(s_in, true);
@@ -206,15 +201,15 @@ int IRF_gunzip(std::string s_in, std::string s_out) {
 
 // [[Rcpp::export]]
 List IRF_gunzip_DF(std::string s_in, StringVector s_header_begin) {
+  // Reads a table when the string of its first column is given
+  // Equivalent to data.table::fread(s_in, skip = s_header_begin)
+  
   List Final_final_list;
   
   GZReader gz_in;
   int ret = gz_in.LoadGZ(s_in, false, true);
   if(ret != 0) return(Final_final_list);
-	
-  // std::ofstream out;
-  // out.open(s_out, std::ifstream::out);
-  
+
   // Look for first line of data to return
   std::string myLine;
   std::string myEntry;
@@ -250,7 +245,6 @@ List IRF_gunzip_DF(std::string s_in, StringVector s_header_begin) {
 					check_line = true;
 				}
 			}
-
     }
 
     // use a map of string vectors
@@ -365,13 +359,11 @@ int IRF_core(std::string const &bam_file,
  
   std::string myLine;
 	if(verbose) Rcout << "Processing BAM file " << bam_file << "\n";
-  
-  
+   
   std::ifstream inbam_stream;   inbam_stream.open(bam_file, std::ios::in | std::ios::binary);
   BAMReader_Multi inbam;        inbam.SetInputHandle(&inbam_stream); // Rcout << "BAMReader_Multi handle set\n";  
   
   BAM2blocks BB;  
-  if(verbose) Rcout << "Identifying BGZF blocks in BAM file\n";
   unsigned int n_bgzf_blocks = BB.openFile(&inbam, verbose, n_threads_to_use);
   // This step writes chrs to BB, and BB obtains bgzf block positions for each worker
   if(n_bgzf_blocks == 0) {
@@ -436,7 +428,7 @@ int IRF_core(std::string const &bam_file,
   // Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
   unsigned int blocks_read_total = 0;
   int ret = 0;
-  unsigned int first_cab = 0;
+
 #ifdef _OPENMP
   #pragma omp parallel for
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
@@ -461,23 +453,8 @@ int IRF_core(std::string const &bam_file,
         #pragma omp critical
         p.increment(n_blocks_read);
       }
-      // Rcout << "Blocks read: " << n_blocks_read << '\n';
+
     }
-/*
-    #pragma omp critical
-    if(first_cab == 0) {
-      first_cab = i;
-    } else {
-      oJC.at(first_cab)->Combine(*oJC.at(i));
-      oChr.at(first_cab)->Combine(*oChr.at(i));
-      oSP.at(first_cab)->Combine(*oSP.at(i));
-      oROI.at(first_cab)->Combine(*oROI.at(i));
-      oCB.at(first_cab)->Combine(*oCB.at(i));
-      oFM.at(first_cab)->Combine(*oFM.at(i));
-      
-      BBchild.at(first_cab)->processSpares(*BBchild.at(i));
-    }
-*/
   }
 #else
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
@@ -512,17 +489,15 @@ int IRF_core(std::string const &bam_file,
   p.increment(final_inc);
 
   inbam_stream.close();
-  // Rcout << "BAM processing finished\n";
   
   if(n_threads_to_use > 1) {
     if(verbose) Rcout << "Compiling data from threads\n";
   // Combine BB's and process spares
     for(unsigned int i = 1; i < n_threads_to_use; i++) {
       BBchild.at(0)->processSpares(*BBchild.at(i));
-      // if(i != first_cab) {
-        delete BBchild.at(i);
-        delete BRchild.at(i);
-      // }
+
+      delete BBchild.at(i);
+      delete BRchild.at(i);
 
     }
   // Combine objects:
@@ -533,21 +508,20 @@ int IRF_core(std::string const &bam_file,
       oROI.at(0)->Combine(*oROI.at(i));
       oCB.at(0)->Combine(*oCB.at(i));
       oFM.at(0)->Combine(*oFM.at(i));
-      // if(i != first_cab) {
-        delete oJC.at(i);
-        delete oChr.at(i);
-        delete oSP.at(i);
-        delete oROI.at(i);
-        delete oCB.at(i);
-        delete oFM.at(i);
-      // }
+
+      delete oJC.at(i);
+      delete oChr.at(i);
+      delete oSP.at(i);
+      delete oROI.at(i);
+      delete oCB.at(i);
+      delete oFM.at(i);
     }
   }
 
   // Write Coverage Binary file:
-  std::ofstream ofCOV;                          ofCOV.open(s_output_cov, std::ofstream::binary);  
-  covWriter outCOV;                             outCOV.SetOutputHandle(&ofCOV);
-  oFM.at(first_cab)->WriteBinary(&outCOV, verbose);     ofCOV.close();
+  std::ofstream ofCOV;                                  ofCOV.open(s_output_cov, std::ofstream::binary);  
+  covWriter outCOV;                                     outCOV.SetOutputHandle(&ofCOV);
+  oFM.at(0)->WriteBinary(&outCOV, verbose);     ofCOV.close();
 
 // Write output to file:  
 	if(verbose) Rcout << "Writing output file\n";
@@ -556,10 +530,10 @@ int IRF_core(std::string const &bam_file,
   GZWriter outGZ;                               outGZ.SetOutputHandle(&out); // GZ compression
 
 // Write stats here:
-  BBchild.at(first_cab)->WriteOutput(myLine);
+  BBchild.at(0)->WriteOutput(myLine);
   outGZ.writeline("BAM_report\tValue"); outGZ.writestring(myLine); outGZ.writeline("");
 
-  int directionality = oJC.at(first_cab)->Directional(myLine);
+  int directionality = oJC.at(0)->Directional(myLine);
   outGZ.writeline("Directionality\tValue"); outGZ.writestring(myLine); outGZ.writeline("");
 
   // Generate output but save this to strings:
@@ -571,19 +545,13 @@ int IRF_core(std::string const &bam_file,
   std::string myLine_Dir;
   std::string myLine_QC;
   
-  // Rcout << "Writing ROIs\n";
-  oROI.at(first_cab)->WriteOutput(myLine_ROI, myLine_QC);
-  // Rcout << "Writing Juncs\n";
-	oJC.at(first_cab)->WriteOutput(myLine_JC, myLine_QC);
-  // Rcout << "Writing Spans\n";
-	oSP.at(first_cab)->WriteOutput(myLine_SP, myLine_QC);
-  // Rcout << "Writing Chrs\n";
-	oChr.at(first_cab)->WriteOutput(myLine_Chr, myLine_QC);
-  // Rcout << "Writing CoverageBlocks\n";
-	oCB.at(first_cab)->WriteOutput(myLine_ND, myLine_QC, *oJC.at(first_cab), *oSP.at(first_cab), *oFM.at(first_cab), n_threads_to_use);
+  oROI.at(0)->WriteOutput(myLine_ROI, myLine_QC);
+	oJC.at(0)->WriteOutput(myLine_JC, myLine_QC);
+	oSP.at(0)->WriteOutput(myLine_SP, myLine_QC);
+	oChr.at(0)->WriteOutput(myLine_Chr, myLine_QC);
+	oCB.at(0)->WriteOutput(myLine_ND, myLine_QC, *oJC.at(0), *oSP.at(0), *oFM.at(0), n_threads_to_use);
   if (directionality != 0) {
-    // Rcout << "Writing Stranded CoverageBlocks\n";
-    oCB.at(first_cab)->WriteOutput(myLine_Dir, myLine_QC, *oJC.at(first_cab), *oSP.at(first_cab), *oFM.at(first_cab), n_threads_to_use, directionality); // Directional.
+    oCB.at(0)->WriteOutput(myLine_Dir, myLine_QC, *oJC.at(0), *oSP.at(0), *oFM.at(0), n_threads_to_use, directionality); // Directional.
 	}
 
   outGZ.writeline("QC\tValue"); outGZ.writestring(myLine_QC); outGZ.writeline("");
@@ -609,15 +577,14 @@ int IRF_core(std::string const &bam_file,
   out.flush(); out.close();
   
   // destroy objects:
-
-  delete oJC.at(first_cab);
-  delete oChr.at(first_cab);
-  delete oSP.at(first_cab);
-  delete oROI.at(first_cab);
-  delete oCB.at(first_cab);
-  delete oFM.at(first_cab);
-  delete BRchild.at(first_cab);
-  delete BBchild.at(first_cab);
+  delete oJC.at(0);
+  delete oChr.at(0);
+  delete oSP.at(0);
+  delete oROI.at(0);
+  delete oCB.at(0);
+  delete oFM.at(0);
+  delete BRchild.at(0);
+  delete BBchild.at(0);
 
   return(0);
 }
@@ -655,14 +622,12 @@ int IRF_main(std::string bam_file, std::string reference_file, std::string s_out
   FragmentsInROI * ROI_template = new FragmentsInROI;
   JunctionCount * JC_template = new JunctionCount;
   
-  int ret = 0;
-  
-  ret = IRF_ref(s_ref, *CB_template, *SP_template, *ROI_template, *JC_template, verbose);
+  int ret = IRF_ref(s_ref, *CB_template, *SP_template, *ROI_template, *JC_template, verbose);
   if(ret != 0) {
     Rcout << "Reading Reference file failed. Check if IRFinder.ref.gz exists and is a valid NxtIRF-generated IRFinder reference\n";
     return(ret);
   }
-  // main:
+
   ret = IRF_core(s_bam, s_output_txt, s_output_cov,
     *CB_template, *SP_template, *ROI_template, *JC_template, verbose, use_threads);
     
@@ -701,21 +666,17 @@ int IRF_main_multi(std::string reference_file, StringVector bam_files, StringVec
   FragmentsInROI * ROI_template = new FragmentsInROI;
   JunctionCount * JC_template = new JunctionCount;
   
-  int ret = 0;
-  
-  ret = IRF_ref(s_ref, *CB_template, *SP_template, *ROI_template, *JC_template, false);
+  int ret = IRF_ref(s_ref, *CB_template, *SP_template, *ROI_template, *JC_template, false);
   if(ret != 0) {
     Rcout << "Reading Reference file failed. Check if IRFinder.ref.gz exists and is a valid NxtIRF-generated IRFinder reference\n";
     return(ret);
   }
 
 	Rcout << "Running IRFinder with OpenMP using " << use_threads << " threads\n";
-
   for(unsigned int z = 0; z < v_bam.size(); z++) {
     std::string s_bam = v_bam.at(z);
 		std::string s_output_txt = v_out.at(z) + ".txt.gz";
 		std::string s_output_cov = v_out.at(z) + ".cov";
-		// Rcout << "Processing " << s_bam << " with output " << v_out.at(z) << '\n';
     
     int ret2 = IRF_core(s_bam, s_output_txt, s_output_cov,
       *CB_template, *SP_template, *ROI_template, *JC_template, verbose, use_threads);
@@ -771,7 +732,7 @@ int main(int argc, char * argv[]) {
       std::string s_ref = argv[3];
       std::string s_output_txt = argv[4];		
       std::string s_output_cov = argv[5];		
-  IRF_main(s_bam, s_ref, s_output_txt, s_output_cov);
+      IRF_main(s_bam, s_ref, s_output_txt, s_output_cov);
   } else {
     Rcout << "Usage:\n\t"
       << argv[0] <<  " main samplename.bam IRFinder.ref.gz samplename.txt.gz samplename.cov\n"

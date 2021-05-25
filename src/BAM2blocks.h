@@ -12,6 +12,7 @@
 
 
 class BAM2blocks {
+  private:
     static const int BAM_HEADER_BYTES = 8;
     static const int BAM_READ_CORE_BYTES = 36;
     static const int BAM_READ_CORE_MAX_CIGAR = 2000;
@@ -26,10 +27,10 @@ class BAM2blocks {
     unsigned int processPair(bam_read_core * read1, bam_read_core * read2);
     unsigned int processSingle(bam_read_core * read1);
 
-  	unsigned int readBamHeader(
+    unsigned int readBamHeader(
       std::vector<uint64_t> &block_begins, 
       std::vector<unsigned int> &read_offsets, bool verbose = false,
-      unsigned int n_workers = 1);  // implied by openFile. So perhaps should be private.
+      unsigned int n_workers = 1);
 
     // Statistics.
     unsigned long cReadsProcessed;
@@ -56,8 +57,8 @@ class BAM2blocks {
 
     std::map< std::string, bam_read_core* > * spare_reads;    
   public:
-  	BAM2blocks(); ~BAM2blocks();
-  	unsigned int openFile(BAMReader_Multi * _IN, bool verbose = false,
+    BAM2blocks(); ~BAM2blocks();
+    unsigned int openFile(BAMReader_Multi * _IN, bool verbose = false,
       unsigned int n_workers = 1);
     void AttachReader(BAMReader_Multi * _IN);
     
@@ -66,10 +67,10 @@ class BAM2blocks {
         uint64_t &end_bgzf, unsigned int &end_pos     
     );
     void TransferChrs(BAM2blocks& other);
-  	int processAll();
-  	int processSpares(BAM2blocks& other);
+    int processAll();
+    int processSpares(BAM2blocks& other);
 
-  	int WriteOutput(std::string& output);
+    int WriteOutput(std::string& output);
 
     bam_read_core * SupplyRead(std::string& read_name);
 

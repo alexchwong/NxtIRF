@@ -357,6 +357,8 @@ unsigned int BAMReader_Multi::ProfileBAM(
     read_offsets.push_back(0);
     return(temp_begins.size());    
   }
+
+  if(verbose) Rcout << "Identifying BGZF blocks in BAM file\n";
   
   for(unsigned int j = 0; j < block_begins.size(); j++) {
     buffer_chunk * temp_buffer = new buffer_chunk;
