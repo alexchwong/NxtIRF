@@ -325,7 +325,7 @@ int IRF_GenerateMappabilityRegions(std::string bam_file, std::string s_output_tx
 #endif
    // Write Coverage Binary file:
     std::ofstream ofCOV;                          ofCOV.open(s_output_cov, std::ofstream::binary);  
-    covFile outCOV;                               outCOV.SetOutputHandle(&ofCOV);
+    covWriter outCOV;                             outCOV.SetOutputHandle(&ofCOV);
     oFM.at(0)->WriteBinary(&outCOV, verbose);     ofCOV.close();
   }
   

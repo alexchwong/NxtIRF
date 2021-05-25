@@ -27,7 +27,7 @@ bool IRF_Check_Cov(std::string s_in) {
   std::ifstream inCov_stream;
   inCov_stream.open(s_in, std::ifstream::binary);	
 
-  covFile inCov;
+  covReader inCov;
   inCov.SetInputHandle(&inCov_stream);
 
   if(inCov.fail()){
@@ -63,7 +63,7 @@ List IRF_RLE_From_Cov(std::string s_in, std::string seqname, int start, int end,
   std::ifstream inCov_stream;
   inCov_stream.open(s_in, std::ifstream::binary);
   
-  covFile inCov;
+  covReader inCov;
   inCov.SetInputHandle(&inCov_stream);
 
   if(inCov.fail()){
@@ -145,7 +145,7 @@ List IRF_RLEList_From_Cov(std::string s_in, int strand) {
   std::ifstream inCov_stream;
   inCov_stream.open(s_in, std::ifstream::binary);
   
-  covFile inCov;
+  covReader inCov;
   inCov.SetInputHandle(&inCov_stream);
 
   if(inCov.fail()){

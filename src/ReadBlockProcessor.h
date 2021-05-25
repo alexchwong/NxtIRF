@@ -134,7 +134,6 @@ public:
   void ProcessBlocks(const FragmentBlocks &blocks);
   void ChrMapUpdate(const std::vector<chr_entry> &chrmap);
   int WriteOutput(std::ostream *os, int threshold = 4, bool verbose = false) ;
-  int WriteBinary(covFile *os, bool verbose = false) ;
   int WriteBinary(covWriter *os, bool verbose = false) ;
   
   void updateCoverageHist(std::map<unsigned int,unsigned int> &hist, unsigned int start, unsigned int end, unsigned int dir, const unsigned int &refID, bool debug = false) const;
