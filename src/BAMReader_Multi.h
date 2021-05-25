@@ -114,9 +114,10 @@ class BAMReader_Multi {
     int read_from_file(unsigned int n_blocks);
     int decompress(bool allow_openmp = false);
     
-    unsigned int read(char * dest, unsigned int len);  // returns the number of bytes actually read
-    unsigned int ignore(unsigned int len);
-    unsigned int peek(char * dest, unsigned int len) ;
+    unsigned int beep(char * dest, unsigned int len, unsigned int mode = 0);
+    unsigned int read(char * dest, unsigned int len) { return(beep(dest, len, 0)); };  // returns the number of bytes actually read
+    unsigned int ignore(unsigned int len) { return(beep(NULL, len, 1)); } ; 
+    unsigned int peek(char * dest, unsigned int len) { return(beep(dest, len, 2)); } ;
     
     bool isReadable();
     bool isReadableStrict();

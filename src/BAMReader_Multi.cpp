@@ -565,105 +565,70 @@ int BAMReader_Multi::decompress(bool allow_openmp) {
   return(0);
 }
 
-unsigned int BAMReader_Multi::read(char * dest, unsigned int len) {  
+unsigned int BAMReader_Multi::beep(char * dest, unsigned int len, unsigned int mode) {  
   // Read from current buffer
-  unsigned int cursor = 0;
-  if(IS_EOB == 1) return(cursor);
-  while(cursor < len) {
-    if(buffer_pos == comp_buffer_count && IS_EOF != 1) {
-      if(auto_load_data) {
-        read_from_file(n_bgzf);
-        decompress();
-      } else {
-        return(cursor);
-      }
-    } // reading will always start with reading buffer if current is empty
-    if(!buffer.at(buffer_pos).is_eof_block()) {
-      cursor += buffer.at(buffer_pos).read(dest + cursor, len - cursor);
-    }
-    if(buffer.at(buffer_pos).is_at_end()) {
-      buffer.at(buffer_pos).clear_buffer(); // destroy current buffer
-      buffer_pos++; // increment
-      if(buffer_pos == comp_buffer_count) return(cursor);
-      if(IS_EOF == 1 && buffer_pos == comp_buffer_count - 1 && 
-          buffer.at(buffer_pos).GetRemainingBytes() == 0) {
-        IS_EOB = 1; // Rcout << "EOB reached\n";
-        return(cursor);
-      }
-      // if(buffer_pos < comp_buffer_count && !buffer.at(buffer_pos).is_decompressed()) {
-        // decompress();
-      // }
-    } // reading will always end with end of buffer being cleared
-
-  }
-  return(cursor);
-}
-
-unsigned int BAMReader_Multi::peek(char * dest, unsigned int len) {  
-  // Read from current buffer
+  if(IS_EOB == 1) return(0);
+  
   unsigned int cursor = 0;
   unsigned int temp_buffer_pos = buffer_pos;
-  if(IS_EOB == 1) return(cursor);
+  unsigned int begin_buffer_pos = buffer_pos;
+  
   while(cursor < len) {
-    if(temp_buffer_pos == comp_buffer_count && IS_EOF != 1) {
-      if(auto_load_data) {
-        read_from_file(n_bgzf);
-        decompress();
+    // reading will always start with reading buffer if current is empty
+    if(temp_buffer_pos == comp_buffer_count) {
+      if(IS_EOF != 1) {
+        if(mode != 2) {
+          if(auto_load_data) {
+            if(comp_buffer_count == buffer_count) {
+              read_from_file(n_bgzf);
+            }
+            decompress();
+          } else {
+            break;
+          }
+        } else {
+          break;
+        }
       } else {
-        return(cursor);
+        break;
       }
-    } // reading will always start with reading buffer if current is empty
-    if(!buffer.at(temp_buffer_pos).is_eof_block()) {
-      cursor += buffer.at(temp_buffer_pos).peek(dest + cursor, len - cursor);
+    } else if(buffer.at(temp_buffer_pos).is_eof_block()) {
+      break;
     }
+
+    switch(mode) {
+      case 0:
+        cursor += buffer.at(temp_buffer_pos).read(dest + cursor, len - cursor);
+        break;
+      case 1:
+        cursor += buffer.at(temp_buffer_pos).ignore(len - cursor);
+        break;
+      case 2:
+        cursor += buffer.at(temp_buffer_pos).peek(dest + cursor, len - cursor);
+        break;
+    }
+
     if(buffer.at(temp_buffer_pos).is_at_end()) {
-      // buffer.at(buffer_pos).clear_buffer(); // destroy current buffer
       temp_buffer_pos++; // increment
-      if(temp_buffer_pos == comp_buffer_count) return(cursor);
-      if(IS_EOF == 1 && temp_buffer_pos == comp_buffer_count - 1 &&
+      if(IS_EOF == 1 && temp_buffer_pos == comp_buffer_count - 1 && 
           buffer.at(temp_buffer_pos).GetRemainingBytes() == 0) {
-        // IS_EOB = 1; // Rcout << "EOB reached\n";
-        return(cursor);
-      }
-      // if(buffer_pos < comp_buffer_count && !buffer.at(buffer_pos).is_decompressed()) {
-        // decompress();
-      // }
-    } // reading will always end with end of buffer being cleared
-
-  }
-  return(cursor);
-}
-
-unsigned int BAMReader_Multi::ignore(unsigned int len) {  
-  // Read from current buffer
-  unsigned int cursor = 0;
-  if(IS_EOB == 1) return(cursor);
-  while(cursor < len) {
-    if(buffer_pos == comp_buffer_count && IS_EOF != 1) {
-      if(auto_load_data) {
-        read_from_file(n_bgzf);
-        decompress();        
-      } else {
-        return(cursor);
-      }
-    } // reading will always start with reading buffer if current is empty
-    if(!buffer.at(buffer_pos).is_eof_block()) {
-      cursor += buffer.at(buffer_pos).ignore(len - cursor);
-    }
-    if(buffer.at(buffer_pos).is_at_end()) {
-      buffer.at(buffer_pos).clear_buffer(); // destroy current buffer
-      buffer_pos++; // increment
-      if(buffer_pos == comp_buffer_count) return(cursor);
-      if(IS_EOF == 1 && buffer_pos == comp_buffer_count - 1 && 
-          buffer.at(buffer_pos).GetRemainingBytes() == 0) {
+        // Case where last buffer is EOF block
         IS_EOB = 1; // Rcout << "EOB reached\n";
-        return(cursor);
+        break;
       }
-      // if(buffer_pos < comp_buffer_count && !buffer.at(buffer_pos).is_decompressed()) {
-        // decompress();
-      // }
-    } // reading will always end with end of buffer being cleared
+    }
+    
+  } 
+  // post break:
+  if(mode != 2) {
+    if(temp_buffer_pos > begin_buffer_pos) {
+      for(unsigned int i = begin_buffer_pos; i < temp_buffer_pos; i++) {
+        buffer.at(i).clear_buffer();
+      }
+    }
+    buffer_pos = temp_buffer_pos;
   }
+
   return(cursor);
 }
 
