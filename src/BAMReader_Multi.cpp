@@ -416,20 +416,22 @@ unsigned int BAMReader_Multi::ProfileBAM(
   while(read_from_file(100) > 0) {
     p.increment(comp_buffer_count - buffer_count);
     decompress(true);   // true here means use multi-threading where available
-    
+    Rcout << "Decompressed\t";
     if(buffer.at(buffer_pos).GetBGZFPos() > BAM_READS_BEGIN) {
       if(buffer.at(buffer_pos).GetPos() > 0) {
         // In this position, we are at the end of the previous buffer
         if(!GotoNextRead(false)) break; // goes to the first full read of the next line     
+        Rcout << "At beginning of next BGZF\t";
       }
     }   // because if first buffer, ignore offset - it's intentional
+    
     temp_last_read_offsets.push_back(buffer.at(buffer_pos).GetPos()); // Gets current position of current buffer
     
     while(isReadable()) {
       while(1) {
         if(!GotoNextRead(true)) break; // strict step onto next read until end of bgzf
       }
-
+      Rcout << "End of BGZF\t";
       if(buffer.at(buffer_pos).GetPos() == 0) {   
       // If ends at full read, ignore() automatically goes to pos=0 of next buffer
         if(isReadable()) {
