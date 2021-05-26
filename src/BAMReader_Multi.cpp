@@ -499,8 +499,8 @@ int BAMReader_Multi::read_from_file(unsigned int n_blocks) {
   IN->clear();    // In case another thread has hit the EOF bit
   IN->seekg (BAM_BLOCK_CURSOR, std::ios_base::beg);
   
-  // Rcout << "Reading blocks starting from " << comp_buffer_count << " at file position "
-    // << BAM_BLOCK_CURSOR << '\n';
+  Rcout << "Reading blocks starting from " << comp_buffer_count << " at file position "
+    << BAM_BLOCK_CURSOR << '\n';
   
   buffer.resize(comp_buffer_count + n_blocks);
   while(i < n_blocks) {
