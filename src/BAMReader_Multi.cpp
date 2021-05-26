@@ -499,8 +499,8 @@ int BAMReader_Multi::read_from_file(unsigned int n_blocks) {
   IN->clear();    // In case another thread has hit the EOF bit
   IN->seekg (BAM_BLOCK_CURSOR, std::ios_base::beg);
   
-  Rcout << "Reading blocks starting from " << comp_buffer_count << " at file position "
-    << BAM_BLOCK_CURSOR << '\n';
+  // Rcout << "Reading blocks starting from " << comp_buffer_count << " at file position "
+    // << BAM_BLOCK_CURSOR << '\n';
   
   buffer.resize(comp_buffer_count + n_blocks);
   while(i < n_blocks) {
@@ -527,11 +527,11 @@ int BAMReader_Multi::read_from_file(unsigned int n_blocks) {
     // Set begin cursor if BAM_BLOCK_CURSOR == begin_block_offset
     if(BAM_BLOCK_CURSOR == begin_block_offset) {
       buffer.at(comp_buffer_count).SetPos(begin_read_offset);
-      Rcout << "Block @ " << begin_block_offset << " Setting begin read offset" << begin_read_offset << '\n';
+      // Rcout << "Block @ " << begin_block_offset << " Setting begin read offset" << begin_read_offset << '\n';
     }
     if(BAM_BLOCK_CURSOR == end_block_offset && end_block_offset > 0) {
       buffer.at(comp_buffer_count).SetEndPos(end_read_offset);
-      Rcout << "Block @ " << end_block_offset << " Setting end read offset" << end_block_offset << '\n';
+      // Rcout << "Block @ " << end_block_offset << " Setting end read offset" << end_block_offset << '\n';
       IS_EOF = 1;   // Set virtual EOF
       i--;
     }
