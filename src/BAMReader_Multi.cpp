@@ -478,7 +478,7 @@ unsigned int BAMReader_Multi::ProfileBAM(
   IS_EOF = 0;
   
   // divide cake into n_threads:
-  divisor = 1 + (temp_begins.size()/ target_n_threads);
+  divisor = (temp_begins.size()/ target_n_threads);
   i = 0;
   while(i < temp_begins.size() && block_begins.size() < target_n_threads) {
     block_begins.push_back(temp_begins.at(i));

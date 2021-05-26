@@ -386,6 +386,8 @@ int IRF_core(std::string const &bam_file,
   Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
   Rcout << "n_threads_to_use: " << n_threads_to_use << '\n';
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
+    Rcout << "Preparing task " << i;
+    
     oCB.push_back(new CoverageBlocksIRFinder(CB_template));
     oSP.push_back(new SpansPoint(SP_template));
     oROI.push_back(new FragmentsInROI(ROI_template));
@@ -416,7 +418,7 @@ int IRF_core(std::string const &bam_file,
     // Assign task:
     uint64_t begin_bgzf; unsigned int begin_pos;
     uint64_t end_bgzf; unsigned int end_pos;
-    Rcout << "Preparing task " << i;
+    
     BB.ProvideTask(i, begin_bgzf, begin_pos, end_bgzf, end_pos);
     Rcout << " begin_bgzf " <<  begin_bgzf << "end_bgzf" << end_bgzf << '\n';
     BRchild.at(i)->AssignTask(&inbam_stream, begin_bgzf, begin_pos, end_bgzf, end_pos);
