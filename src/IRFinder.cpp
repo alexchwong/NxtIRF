@@ -441,9 +441,13 @@ int IRF_core(std::string const &bam_file,
       n_blocks_read = (unsigned int)BRchild.at(i)->read_from_file(100);
       
       if(n_blocks_read > 0) {
+        Rcout << "Decompressing from file...\n";
         BRchild.at(i)->decompress();
+
+        Rcout << "Processing...\n";
         ret2 = BBchild.at(i)->processAll();
         
+        Rcout << "Processing done...\n";
         #pragma omp critical
         if(ret2 == -1) {
           ret = -1;    // abort if broken reads detected
