@@ -416,8 +416,9 @@ int IRF_core(std::string const &bam_file,
     // Assign task:
     uint64_t begin_bgzf; unsigned int begin_pos;
     uint64_t end_bgzf; unsigned int end_pos;
+    Rcout << "Preparing task " << i;
     BB.ProvideTask(i, begin_bgzf, begin_pos, end_bgzf, end_pos);
-    
+    Rcout << " begin_bgzf " <<  begin_bgzf << "end_bgzf" << end_bgzf << '\n';
     BRchild.at(i)->AssignTask(&inbam_stream, begin_bgzf, begin_pos, end_bgzf, end_pos);
     BRchild.at(i)->SetAutoLoad(false);
     

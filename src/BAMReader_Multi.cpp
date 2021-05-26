@@ -483,11 +483,13 @@ unsigned int BAMReader_Multi::ProfileBAM(
   while(i < temp_begins.size() && block_begins.size() < target_n_threads) {
     block_begins.push_back(temp_begins.at(i));
     read_offsets.push_back(temp_last_read_offsets.at(i));
+    Rcout << temp_begins.at(i) << '\t' << temp_last_read_offsets.at(i) << '\n';
     i+=divisor;
   }
   // Return position of EOF block:
   block_begins.push_back(temp_begins.at(temp_begins.size() - 1));
   read_offsets.push_back(0);
+  Rcout << temp_begins.at(temp_begins.size() - 1) << '\t' << 0 << '\n';
 
   return(temp_begins.size());
 }
