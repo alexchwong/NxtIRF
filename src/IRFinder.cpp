@@ -383,6 +383,8 @@ int IRF_core(std::string const &bam_file,
   std::vector<BAM2blocks*> BBchild;
   std::vector<BAMReader_Multi*> BRchild;
 
+  Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
+
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
     oCB.push_back(new CoverageBlocksIRFinder(CB_template));
     oSP.push_back(new SpansPoint(SP_template));
@@ -422,10 +424,10 @@ int IRF_core(std::string const &bam_file,
     BBchild.at(i)->AttachReader(BRchild.at(i));
     BBchild.at(i)->TransferChrs(BB);
   }
+  Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
   
   // BAM processing loop
   Progress p(n_bgzf_blocks, verbose);
-  Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
   unsigned int blocks_read_total = 0;
   int ret = 0;
 
