@@ -223,21 +223,23 @@ int IRF_GenerateMappabilityRegions(std::string bam_file, std::string s_output_tx
  
   std::string myLine;
 	if(verbose) Rcout << "Processing BAM file\n";
-  
 
-  std::ifstream inbam_stream;   inbam_stream.open(bam_file, std::ios::in | std::ios::binary);
+  std::ifstream inbam_stream;
   BAMReader_Multi inbam;        
-  if(bam_file == "-") {
-    n_threads_to_use = 1;   
-    // Will need to make modifications to ensure n_threads = 1 is compatible with streamed data
-    inbam.SetInputHandle(&std::cin);        
-  } else {
-    inbam_stream.open(bam_file, std::ios::in | std::ios::binary);
-    inbam.SetInputHandle(&inbam_stream);    
-  }
+
+  inbam_stream.open(bam_file, std::ios::in | std::ios::binary);
+  inbam.SetInputHandle(&inbam_stream);    
   
   BAM2blocks BB;  
-  unsigned int n_bgzf_blocks = BB.openFile(&inbam, n_threads_to_use);
+  unsigned int n_bgzf_blocks = BB.openFile(&inbam, verbose, n_threads_to_use);
+
+  if(n_bgzf_blocks == 0) {
+    Rcout << "Error occurred profiling BAM file\n";
+    return(-1);
+  } else if(n_bgzf_blocks == 1) {
+    if(verbose) Rcout << "BAM is too small for multi-threaded run, using single thread instead\n";
+    n_threads_to_use = 1;
+  }
 
   std::vector<FragmentsMap*> oFM;
   std::vector<BAM2blocks*> BBchild;
@@ -262,46 +264,67 @@ int IRF_GenerateMappabilityRegions(std::string bam_file, std::string s_output_tx
     BBchild.at(i)->AttachReader(BRchild.at(i));
     BBchild.at(i)->TransferChrs(BB);
   }
+
   // BAM processing loop
   Progress p(n_bgzf_blocks, verbose);
   // Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
+  unsigned int blocks_read_total = 0;
+  int ret = 0;
 
 #ifdef _OPENMP
-  unsigned int blocks_read_total = 0;
   #pragma omp parallel for
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
-    while(!BRchild.at(i)->eob()) {
-      unsigned int n_blocks_read = 0;
+    unsigned int n_blocks_read = 1;
+    int ret2 = 0;
+    while(!BRchild.at(i)->eob() && !p.check_abort() && n_blocks_read > 0 && ret == 0) {
       #pragma omp critical
       n_blocks_read = (unsigned int)BRchild.at(i)->read_from_file(100);
       
-      BRchild.at(i)->decompress();
-      BBchild.at(i)->processAll();
-      
-      #pragma omp critical
-      p.increment(n_blocks_read);
-      
-      #pragma omp critical
-      blocks_read_total += n_blocks_read;
-      
-      // #pragma omp critical
-      // Rcout << "Blocks read: " << n_blocks_read << '\n';
+      if(n_blocks_read > 0) {
+        BRchild.at(i)->decompress();
+        ret2 = BBchild.at(i)->processAll();
+        
+        #pragma omp critical
+        if(ret2 == -1) {
+          ret = -1;    // abort if broken reads detected
+        }
+        
+        #pragma omp atomic
+        blocks_read_total += n_blocks_read;
+        
+        #pragma omp critical
+        p.increment(n_blocks_read);
+      }
+
     }
   }
-  if(blocks_read_total < n_bgzf_blocks) p.increment(n_bgzf_blocks - blocks_read_total);
-  
 #else
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
-    while(!BRchild.at(i)->eob()) {
-      
-      int n_blocks_read = BRchild.at(i)->read_from_file(100);
+    unsigned int n_blocks_read = 0;
+    while(!BRchild.at(i)->eob() && !p.check_abort() && ret == 0) {
+      n_blocks_read = (unsigned int)BRchild.at(i)->read_from_file(100);
       BRchild.at(i)->decompress();
-      BBchild.at(i)->processAll();
+      ret = BBchild.at(i)->processAll();
       
+      blocks_read_total += n_blocks_read;
       p.increment(n_blocks_read);
     }
+    
   }
 #endif
+  if(p.check_abort()) {
+    // interrupted:
+    for(unsigned int i = 0; i < n_threads_to_use; i++) {
+      delete oFM.at(i);
+      delete BRchild.at(i);
+      delete BBchild.at(i);
+    }
+    return(-1);
+  }
+
+  int final_inc = max((int)(n_bgzf_blocks - blocks_read_total), 1);
+  p.increment(final_inc);
+
   inbam_stream.close();
   // Rcout << "BAM processing finished\n";
   
@@ -310,10 +333,13 @@ int IRF_GenerateMappabilityRegions(std::string bam_file, std::string s_output_tx
   // Combine BB's and process spares
     for(unsigned int i = 1; i < n_threads_to_use; i++) {
       BBchild.at(0)->processSpares(*BBchild.at(i));
+      delete BBchild.at(i);
+      delete BRchild.at(i);
     }
   // Combine objects:
     for(unsigned int i = 1; i < n_threads_to_use; i++) {
       oFM.at(0)->Combine(*oFM.at(i));
+      delete oFM.at(i);
     }
   }
 
@@ -336,11 +362,10 @@ int IRF_GenerateMappabilityRegions(std::string bam_file, std::string s_output_tx
   outFragsMap.flush(); outFragsMap.close();
 
   // destroy objects:
-  for(unsigned int i = 0; i < n_threads_to_use; i++) {
-    delete oFM.at(i);
-    delete BRchild.at(i);
-    delete BBchild.at(i);
-  }
+
+  delete oFM.at(0);
+  delete BRchild.at(0);
+  delete BBchild.at(0);
 
   return(0);
 }
