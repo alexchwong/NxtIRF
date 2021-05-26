@@ -746,15 +746,16 @@ bool BAMReader_Multi::eof() {
 
 // End of Buffer is when both file and buffer are exhausted
 bool BAMReader_Multi::eob() {
-  if(IS_EOB == 1) {
+  if(IS_EOB == 1) 
       return (true);
-  } else {
+  // } else {
     // if(IS_EOF == 1 && buffer_pos == comp_buffer_count - 1 && buffer.at(buffer_pos).is_at_end()) {
       // buffer.at(buffer_pos).clear_buffer();
       // IS_EOB = 1; // Rcout << "EOB reached\n";
       // return (true);
     // } else {
-      return (false);
+      // return (false);
     // }
-  }
+  // }
+  return(false);
 }

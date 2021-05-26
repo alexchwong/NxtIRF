@@ -435,6 +435,8 @@ int IRF_core(std::string const &bam_file,
     unsigned int n_blocks_read = 1;
     int ret2 = 0;
     while(!BRchild.at(i)->eob() && !p.check_abort() && n_blocks_read > 0 && ret == 0) {
+      Rcout << "Reading from file...\n";
+      
       #pragma omp critical
       n_blocks_read = (unsigned int)BRchild.at(i)->read_from_file(100);
       
