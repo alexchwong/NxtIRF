@@ -5,7 +5,7 @@
     } else {
         n_threads = parallel::detectCores()
         packageStartupMessage(paste(
-            "NxtIRF built with OpenMP, maximum ", n_threads, "cores"))
+            "NxtIRF built with OpenMP, maximum ", n_threads, "threads"))
     }
 }
 
