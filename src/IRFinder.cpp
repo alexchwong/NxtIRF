@@ -384,7 +384,7 @@ int IRF_core(std::string const &bam_file,
   std::vector<BAMReader_Multi*> BRchild;
 
   Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
-
+  Rcout << "n_threads_to_use: " << n_threads_to_use << '\n';
   for(unsigned int i = 0; i < n_threads_to_use; i++) {
     oCB.push_back(new CoverageBlocksIRFinder(CB_template));
     oSP.push_back(new SpansPoint(SP_template));
