@@ -199,9 +199,9 @@ void BAMReader_Multi::AssignTask(std::istream *in_stream,
   end_read_offset = end_offset;
   
   BAM_BLOCK_CURSOR = block_begin; 
-  Rcout << "block begin: " << BAM_BLOCK_CURSOR << '\n';
-  Rcout << begin_block_offset << " " << begin_read_offset
-    << ", " << end_block_offset << " " << end_read_offset << '\n';
+  // Rcout << "block begin: " << BAM_BLOCK_CURSOR << '\n';
+  // Rcout << begin_block_offset << " " << begin_read_offset
+    // << ", " << end_block_offset << " " << end_read_offset << '\n';
   
   IN = in_stream;
 }
@@ -747,13 +747,13 @@ bool BAMReader_Multi::eof() {
 bool BAMReader_Multi::eob() {
   if(IS_EOB == 1) {
       return (true);
-  // } else {
+  } else {
     // if(IS_EOF == 1 && buffer_pos == comp_buffer_count - 1 && buffer.at(buffer_pos).is_at_end()) {
       // buffer.at(buffer_pos).clear_buffer();
       // IS_EOB = 1; // Rcout << "EOB reached\n";
       // return (true);
     // } else {
-      // return (false);
+      return (false);
     // }
   }
 }
