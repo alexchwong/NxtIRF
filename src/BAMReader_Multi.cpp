@@ -527,7 +527,7 @@ int BAMReader_Multi::read_from_file(unsigned int n_blocks) {
     // Set begin cursor if BAM_BLOCK_CURSOR == begin_block_offset
     if(BAM_BLOCK_CURSOR == begin_block_offset) {
       buffer.at(comp_buffer_count).SetPos(begin_read_offset);
-      // Rcout << "Block @ " << begin_block_offset << " Setting begin read offset" << begin_read_offset << '\n';
+      Rcout << "Block @ " << begin_block_offset << " Setting begin read offset" << begin_read_offset << '\n';
     }
     if(BAM_BLOCK_CURSOR == end_block_offset && end_block_offset > 0) {
       buffer.at(comp_buffer_count).SetEndPos(end_read_offset);
