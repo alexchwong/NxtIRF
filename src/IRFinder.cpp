@@ -425,7 +425,7 @@ int IRF_core(std::string const &bam_file,
   
   // BAM processing loop
   Progress p(n_bgzf_blocks, verbose);
-  // Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
+  Rcout << "Total blocks: " << n_bgzf_blocks << '\n';
   unsigned int blocks_read_total = 0;
   int ret = 0;
 
