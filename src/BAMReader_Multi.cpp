@@ -154,6 +154,15 @@ BAMReader_Multi::BAMReader_Multi() {
   BAM_READS_BEGIN = 0;
   BAM_BLOCK_CURSOR = 0;
   IN = NULL;
+  
+  comp_buffer_count = 0;   // File reading will increase this count
+  buffer_count = 0;        // Multi-threaded decompress will increase this count
+  buffer_pos = 0;    
+  
+  begin_block_offset = 0;
+  begin_read_offset = 0;
+  end_block_offset = 0;
+  end_read_offset = 65536;
 }
 
 BAMReader_Multi::BAMReader_Multi(uint64_t block_begin, unsigned int begin_offset,
@@ -217,6 +226,10 @@ void BAMReader_Multi::clearAllBuffers() {
   IS_EOF = 0;
   IS_EOB = 0;
   IS_FAIL = 0;
+  
+  comp_buffer_count = 0;   // File reading will increase this count
+  buffer_count = 0;        // Multi-threaded decompress will increase this count
+  buffer_pos = 0;    
 }
 
 void BAMReader_Multi::SetInputHandle(std::istream *in_stream) {
@@ -445,12 +458,9 @@ unsigned int BAMReader_Multi::ProfileBAM(
         if(buffer_pos == comp_buffer_count - 1) break;
         if(!GotoNextRead(false)) break; 
         temp_last_read_offsets.push_back(buffer.at(buffer_pos).GetPos()); // record next position
-        Rcout << "BGZF# " << buffer_pos << '\t';
         // Rcout << "Block read offset " << buffer.at(buffer_pos).GetPos() << '\n';
       }
-      Rcout << "buffer_pos = " << buffer_pos << ", buffer_count = " << buffer_count << '\n';
     }
-    Rcout << "buffer_pos = " << buffer_pos << " Ready to decompress next block\n";
   }
   if(verbose) Rcout << "Extended profiling finished\n";
   if(temp_last_read_offsets.size() == temp_begins.size() - 1) {
