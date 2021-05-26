@@ -445,7 +445,7 @@ unsigned int BAMReader_Multi::ProfileBAM(
         if(buffer_pos == comp_buffer_count - 1) break;
         if(!GotoNextRead(false)) break; 
         temp_last_read_offsets.push_back(buffer.at(buffer_pos).GetPos()); // record next position
-        // Rcout << "BGZF# " << buffer_pos << '\t';
+        Rcout << "BGZF# " << buffer_pos << '\t';
         // Rcout << "Block read offset " << buffer.at(buffer_pos).GetPos() << '\n';
       }
       Rcout << "buffer_pos = " << buffer_pos << ", buffer_count = " << buffer_count << '\n';
