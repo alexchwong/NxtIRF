@@ -1,0 +1,99 @@
+Package: NxtIRF
+Title: Graphical User Interface for High Performance BAM-based binary
+    alternative splicing event quantitation, differential analysis, and 
+		visualisation.
+Version: 0.99.0
+Date: 2021-11-18
+Authors@R: c(person("Alex Chit Hei", "Wong", email="a.wong@centenary.org.au", 
+		role=c("aut", "cre", "cph")),
+	person("Ulf", "Schmitz", role=c("ctb")))    
+Description: Interactive user-friendly GUI to analyse RNA-seq data for
+    alternative splicing and intron retention analysis. NxtIRF analyses BAM
+		files to quantify alternative splicing, including skipped exons, mutually-
+		exclusive exons, alternative splice site, alternative terminal exon and
+		retained introns. Using the IRFinder algorithm, NxtIRF quantifies both
+		annotated and novel retained introns, and assesses intronic coverage to
+		avoid confounding intronic elements. NxtIRF provides interactivity allowing
+		users to easily construct complex experimental designs, test a range of
+		event filters, perform differential expression using a range of established
+		statistical tools, and interactively visualise results.
+License: MIT + file LICENSE
+Depends:
+  NxtIRFcore
+Imports:
+	methods, stats, utils, graphics, R.utils, magrittr, tools,
+	Rcpp (>= 1.0.5),
+	data.table,
+	fst,
+	shiny,
+	shinyFiles,
+	shinyWidgets,
+	shinydashboard,
+	rhandsontable,
+	ggplot2,
+	AnnotationHub, ExperimentHub, BiocFileCache,
+	BiocGenerics,
+	Biostrings,
+	BiocParallel,
+	DelayedArray,
+	DelayedMatrixStats,
+	DT,
+	genefilter,
+	grDevices,
+	GenomeInfoDb,
+	GenomicRanges,
+	HDF5Array,
+	heatmaply,
+	httr,
+	IRanges,
+	openssl,
+	parallel,
+	plotly,
+	rhdf5,
+	rtracklayer,
+	RColorBrewer,
+	stringr,
+	SummarizedExperiment,
+	S4Vectors,
+	XML
+Suggests: 
+    knitr, rmarkdown, pheatmap,
+    DESeq2, limma, Rsubread, testthat (>= 3.0.0)
+VignetteBuilder: knitr
+biocViews: Software, Transcriptomics, RNASeq, AlternativeSplicing, Coverage, 
+  DifferentialSplicing
+Collate: AllImports.R
+	RcppExports.R
+	globals.R
+	AllClasses.R
+	AllGenerics.R
+	NxtSE-methods.R
+	zzz.R
+	wrappers.R
+	BuildRef.R
+	DE_IR.R
+	CollateData.R
+	filterModules_shiny.R
+	dash_settings.R
+	dash_utils.R
+	dash_ref_new_ui.R
+	dash_ref_new_server.R
+	dash_expr_ui.R
+	dash_expr_server.R
+	dash_QC.R
+	dash_filters.R
+	dash_DE_ui.R
+	dash_DE_server.R
+	dash_vis_ui.R
+	dash_vis_server.R
+	dash_cov_ui.R
+	dash_cov_server.R
+	dash_ui.R
+	dash_server.R
+	dash.R
+	STAR_utils.R
+Encoding: UTF-8
+RoxygenNote: 7.1.1
+URL: https://github.com/alexchwong/NxtIRF
+BugReports: https://support.bioconductor.org/
+Config/testthat/edition: 3
