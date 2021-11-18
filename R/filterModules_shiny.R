@@ -7,7 +7,7 @@ filterModule_UI <- function(id, label = "Counter") {
         selectInput(ns("filterType"), "Filter Type", 
             width = '100%', choices = c("(none)")),
         conditionalPanel(ns = ns,
-        condition = paste0("['Transcript_Support_Level'].",
+        condition = paste0("['TSL'].",
             "indexOf(input.filterType) >= 0"),
             shinyWidgets::sliderTextInput(ns("slider_TSL_min"), 
                 "TSL Threshold", 
@@ -57,7 +57,8 @@ filterModule_UI <- function(id, label = "Counter") {
             condition = "['(none)'].indexOf(input.filterClass) < 0",
             selectInput(ns("EventType"), "Splice Type", width = '100%', 
                 multiple = TRUE,
-                choices = c("IR", "MXE", "SE", "AFE", "ALE", "A5SS", "A3SS"))
+                choices = c("IR", "MXE", "SE", "A5SS", "A3SS",
+                    "AFE", "ALE", "RI"))
         )
     )
 }
@@ -65,188 +66,226 @@ filterModule_UI <- function(id, label = "Counter") {
 filterModule_server <- function(id, filterdata, conditionList) {
     moduleServer(id, function(input, output, session) {
         final <- reactiveValues(
-            filterClass = "",
-            filterType = "",
-            filterVars = list()
+            filterObj = NxtFilter() # initialize to defaults
         )
 
+        # Observe whether colData of NxtSE changes
+        fCond <- final$filterObj@condition
         observeEvent(conditionList(), {
-            choices_conds = c("(none)", conditionList())
-            if(is_valid(final$filterVars$condition) && 
-                    final$filterVars$condition %in% choices_conds) {
-                updateSelectInput(session = session, 
+            choices_conds <- c("(none)", conditionList())
+            if(
+                    # Valid condition
+                    length(choices_conds) > 1 && is_valid(fCond) && 
+                    fCond %in% choices_conds[-1]
+            ) {
+                updateSelectInput(
+                    session = session, 
                     inputId = "select_conds", 
                     choices = choices_conds, 
-                    selected = final$filterVars$condition)
+                    selected = fCond
+                )
+            } else if(
+                is_valid(fCond) && 
+                !(fCond %in% choices_conds)                
+            ){
+                # If condition is valid but not in column, reset it and return
+                updateSelectInput(
+                    session = session, 
+                    inputId = "select_conds", 
+                    choices = choices_conds, 
+                    selected = "(none)"
+                )
+                return()
             } else {
-                updateSelectInput(session = session, 
+                updateSelectInput(
+                    session = session, 
                     inputId = "select_conds", 
                     choices = choices_conds, 
-                    selected = "(none)")            
+                    selected = "(none)"
+                )            
             }
         })
 
         # inputs from final -> UI
         observeEvent(filterdata(), {
-            final = filterdata()
+            final <- filterdata()
+            class_choices <- c("(none)", "Annotation", "Data")
+            type_choices <- c("(none)")
 
-            if(is_valid(final$filterClass)) {
-                if(final$filterClass == "Annotation") {
-                    type_choices = c("Protein_Coding", 
-                        "NMD_Switching", "Transcript_Support_Level")
-                } else if(final$filterClass == "Data") {
-                    type_choices = c("Depth", "Coverage", "Consistency")
-                } else {
-                    type_choices = c("(none)")
+            fClass <- final$filterObj@filterClass
+            if(is_valid(fClass) && fClass %in% class_choices) {
+                if(fClass == "Annotation") {
+                    type_choices <- c("Protein_Coding", "NMD", "TSL", 
+                        "Terminus", "ExclusiveMXE")
+                } else if(fClass == "Data") {
+                    type_choices <- c("Depth", "Coverage", "Consistency")
                 }
+                updateSelectInput(session = session, 
+                    inputId = "filterClass", choices = class_choices, 
+                    selected = fClass)
             } else {
-                type_choices = c("(none)")
-            }
-            if(is_valid(final$filterType) && 
-                    final$filterType %in% type_choices) {
-                updateSelectInput(session = session, inputId = "filterType", 
-                    choices = type_choices, selected = final$filterType)
-                updateSelectInput(session = session, inputId = "filterClass", 
-                    choices = c("(none)", "Annotation", "Data"), 
-                    selected = final$filterClass)
-            } else {
-                # Invalid filter; destroy this record
-                final$filterClass = "(none)"
-                final$filterType = "(none)"
-                updateSelectInput(session = session, inputId = "filterClass", 
-                    choices = c("(none)", "Annotation", "Data"))
-                updateSelectInput(session = session, inputId = "filterType", 
-                    choices = c("(none)"))
-
+                # fClass == "" | fClass == "(none)"
+                updateSelectInput(session = session, 
+                    inputId = "filterClass", choices = class_choices)
+                updateSelectInput(session = session, 
+                    inputId = "filterType", choices = type_choices)
                 return()
             }
             
-            if(is_valid((final$filterVars$minimum))) {
-                if(final$filterType == "Depth") {
-                    shinyWidgets::updateSliderTextInput(
-                        session = session, inputId = "slider_depth_min", 
-                        selected = final$filterVars$minimum)
-                } else  if(final$filterType == "Coverage"){
-                    updateSliderInput(session = session, 
-                        inputId = "slider_cov_min", 
-                        value = final$filterVars$minimum)
-                } else  if(final$filterType == "Transcript_Support_Level"){
-                    shinyWidgets::updateSliderTextInput(
-                        session = session, inputId = "slider_TSL_min", 
-                        selected = final$filterVars$minimum)
-                }
-            }
-            if(is_valid(final$filterVars$maximum)) {
-                shinyWidgets::updateSliderTextInput(
-                    session = session, inputId = "slider_cons_max", 
-                    selected = final$filterVars$maximum)
-            }
-            if(is_valid(final$filterVars$minDepth)) {
+            fType <- final$filterObj@filterType
+            if(is_valid(fType) && fType %in% type_choices) {
+                updateSelectInput(session = session, inputId = "filterType", 
+                    choices = type_choices, selected = fType)
+            } else if(is_valid(fClass) && fClass %in% class_choices) {
+                # fClass != "" & fClass != "(none)"
+                updateSelectInput(session = session, inputId = "filterType", 
+                    choices = type_choices) # Sets default fType if not set
+                return()
+            } else {
+                # Invalid fClass
                 updateSelectInput(session = session, 
-                    inputId = "slider_minDepth", 
-                    selected = final$filterVars$minDepth)
+                    inputId = "filterClass", choices = class_choices)
+                updateSelectInput(session = session, 
+                    inputId = "filterType", choices = type_choices)
+                return()
             }
-            if(is_valid(final$filterVars$minCond)) {
+            
+            fMin <- final$filterObj@minimum # always valid
+            if(fType == "Depth") {
                 shinyWidgets::updateSliderTextInput(
-                    session = session, inputId = "slider_mincond", 
-                    selected = final$filterVars$minCond)
+                    session = session, inputId = "slider_depth_min", 
+                    selected = fMin)
+            } else if(final$filterType == "Coverage"){
+                updateSliderInput(session = session, 
+                    inputId = "slider_cov_min", 
+                    value = fMin)
+            } else  if(final$filterType == "TSL"){
+                shinyWidgets::updateSliderTextInput(
+                    session = session, inputId = "slider_TSL_min", 
+                    selected = fMin)
             }
+            
+            fMax <- final$filterObj@maximum # always valid
+            shinyWidgets::updateSliderTextInput(
+                session = session, inputId = "slider_cons_max", 
+                selected = fMax)
+
+            fmDepth <- final$filterObj@minDepth # always valid
+            updateSelectInput(session = session, 
+                inputId = "slider_minDepth", 
+                selected = fmDepth)
+            
+            fmCond <- final$filterObj@minCond # always valid
+            shinyWidgets::updateSliderTextInput(
+                session = session, inputId = "slider_mincond", 
+                selected = fmCond)
+                
             choices_conds = c("(none)", conditionList())
-            if(is_valid(final$filterVars$condition) && 
-                    final$filterVars$condition %in% choices_conds) {
+            fCond <- final$filterObj@condition
+            if(is_valid(fCond) && fCond %in% choices_conds) {
                 updateSelectInput(session = session, 
                     inputId = "select_conds", 
                     choices = choices_conds, 
-                    selected = final$filterVars$condition)
+                    selected = fCond)
             } else {
                 updateSelectInput(session = session, 
                     inputId = "select_conds", 
                     choices = choices_conds, 
                     selected = "(none)")            
             }
-            if(is_valid(final$filterVars$pcTRUE)){
-                updateSliderInput(session = session, 
-                    inputId = "slider_pcTRUE", 
-                    value = final$filterVars$pcTRUE)
-            }
-            if(is_valid(final$filterVars$EventTypes)) {
-                updateSelectInput(session = session, 
-                    inputId = "EventType", 
-                    selected = final$filterVars$EventTypes)
-            } else {
-                updateSelectInput(session = session, 
-                    inputId = "EventType", selected = NULL)          
-            }
+            
+            fpcTRUE <- final$filterObj@pcTRUE
+            updateSliderInput(session = session, 
+                inputId = "slider_pcTRUE", 
+                value = fpcTRUE)
+            
+            feType <- final$filterObj@EventTypes
+            eOptions <- c("IR", "MXE", "SE", "A3SS", "A5SS", "ALE", "AFE", "RI")
+            
+            # make sure feType is always valid
+            if(length(feType) > 0) feType <- feType[feType %in% eOptions]
+            if(length(feType) == 0) feType <- eOptions
+            updateSelectInput(session = session, 
+                inputId = "EventType", 
+                selected = feType)
         })
 
         # outputs from UI -> final
         observeEvent(input$filterClass, {
-            final$filterClass = input$filterClass
-            if(final$filterClass == "Annotation") {
-                type_choices = c("Protein_Coding", 
-                    "NMD_Switching", "Transcript_Support_Level")
-            } else if(final$filterClass == "Data") {
-                type_choices = c("Depth", "Coverage", "Consistency")
+            final$filterObj@filterClass <- input$filterClass
+            if(input$filterClass == "Annotation") {
+                type_choices <- c("Protein_Coding", "NMD", "TSL", 
+                    "Terminus", "ExclusiveMXE")
+            } else if(input$filterClass == "Data") {
+                type_choices <- c("Depth", "Coverage", "Consistency")
             } else {
-                type_choices = "(none)"
+                type_choices <- "(none)"
             }
-            cur_choice = isolate(final$filterType)
+            cur_choice <- isolate(final$filterType)
             if(is_valid(cur_choice) && cur_choice %in% type_choices) {
                 updateSelectInput(session = session, 
                     inputId = "filterType", 
                     choices = type_choices, selected = cur_choice)
             } else {
+                final$filterObj@filterType <- type_choices[1]
                 updateSelectInput(session = session, 
                     inputId = "filterType", 
                     choices = type_choices)
             }
         })
         observeEvent(input$filterType, {
-            final$trigger = NULL
-            req(is_valid(input$filterType))
-            final$filterType = input$filterType
-            final$trigger = runif(1)
+            # final$trigger = NULL
+            req(input$filterType)
+            fType <- input$filterType
+            final$filterObj@filterType <- fType
 
-            if(input$filterType == "Depth") {
-                final$filterVars$minimum = input$slider_depth_min
-            } else if(input$filterType == "Coverage"){
-                final$filterVars$minimum = input$slider_cov_min
-            } else if(input$filterType == "Transcript_Support_Level"){
-                final$filterVars$minimum = as.numeric(input$slider_TSL_min)
+            fMin <- final$filterObj@minimum
+            if(fType == "Depth") {
+                shinyWidgets::updateSliderTextInput(
+                    session = session, inputId = "slider_depth_min", 
+                    selected = fMin)
+            } else if(final$filterType == "Coverage"){
+                updateSliderInput(session = session, 
+                    inputId = "slider_cov_min", 
+                    value = fMin)
+            } else  if(final$filterType == "TSL"){
+                shinyWidgets::updateSliderTextInput(
+                    session = session, inputId = "slider_TSL_min", 
+                    selected = fMin)
             }
         })
         observeEvent(input$slider_depth_min, {
-            if(final$filterType == "Depth") {
-                final$filterVars$minimum = input$slider_depth_min
+            if(final$filterObj@filterType == "Depth") {
+                final$filterObj@minimum = input$slider_depth_min
             }
         })
         observeEvent(input$slider_cov_min, {
-            if(final$filterType == "Coverage"){
-                final$filterVars$minimum = input$slider_cov_min
+            if(final$filterObj@filterType == "Coverage"){
+                final$filterObj@minimum = input$slider_cov_min
             }
         })
         observeEvent(input$slider_TSL_min,{        
-            if(final$filterType == "Transcript_Support_Level"){
-                final$filterVars$minimum = as.numeric(input$slider_TSL_min)
+            if(final$filterObj@filterType == "TSL"){
+                final$filterObj@minimum = as.numeric(input$slider_TSL_min)
             }
         })
         observeEvent(input$slider_cons_max,{        
-            final$filterVars$maximum = input$slider_cons_max
+            final$filterObj@maximum = input$slider_cons_max
         })
         observeEvent(input$slider_minDepth,{        
-            final$filterVars$minDepth = input$slider_minDepth
+            final$filterObj@minDepth = input$slider_minDepth
         })
         observeEvent(input$slider_mincond,{        
-            final$filterVars$minCond = input$slider_mincond
+            final$filterObj@minCond = input$slider_mincond
         })
         observeEvent(input$select_conds,{        
-            final$filterVars$condition = input$select_conds
+            final$filterObj@condition = input$select_conds
         })
         observeEvent(input$slider_pcTRUE,{        
-            final$filterVars$pcTRUE = input$slider_pcTRUE
+            final$filterObj@pcTRUE = input$slider_pcTRUE
         })
         observeEvent(input$EventType,{        
-            final$filterVars$EventTypes = input$EventType
+            final$filterObj@EventTypes = input$EventType
         })
 
         # Returns filter list from module

@@ -97,9 +97,7 @@ server_filters <- function(
                     for(i in seq_len(8)) {
                         if(!is.null(settings_filter$filters[[i]]$trigger)) {
                             filterSummary <- filterSummary & runFilter(
-                                settings_filter$filters[[i]]$filterClass,
-                                settings_filter$filters[[i]]$filterType,
-                                settings_filter$filters[[i]]$filterVars,
+                                settings_filter$filters[[i]]$filterObj,
                                 get_se()
                             )
                         } else {
