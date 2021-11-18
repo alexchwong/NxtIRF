@@ -280,20 +280,24 @@ server_expr <- function(
                 settings_expr$collate_path)
         })
 
-    # Running IRFinder
+        # Running IRFinder
         observeEvent(input$run_irf_expr,{
             req(input$run_irf_expr)
-            settings_expr$selected_rows <- Expr_IRF_initiate_run(input, session, 
+            settings_expr$selected_rows <- Expr_IRF_initiate_run(
+                input, session, 
                 get_threads_reactive(), 
-                isolate(reactiveValuesToList(settings_expr)))
+                isolate(reactiveValuesToList(settings_expr))
+            )
         })
         observeEvent(input$irf_confirm, {
             if(input$irf_confirm == FALSE) {
                 settings_expr$selected_rows = c()
                 return()
             } else {
-                Expr_IRF_actually_run(input, session, get_threads_reactive(), 
-                    isolate(reactiveValuesToList(settings_expr)))
+                Expr_IRF_actually_run(
+                    input, session, get_threads_reactive(), 
+                    isolate(reactiveValuesToList(settings_expr))
+                )
             }
             settings_expr$selected_rows = c()
             settings_expr$df.files <- Expr_Load_IRFs(
@@ -305,7 +309,7 @@ server_expr <- function(
                 output = output)
         })
 
-    # Running CollateData
+        # Running CollateData
         observeEvent(input$run_collate_expr, {
             req(input$run_collate_expr)
             req(settings_expr$df.files)
@@ -314,32 +318,42 @@ server_expr <- function(
             ))
             reference_path = settings_expr$ref_path
             output_path = settings_expr$collate_path
-            if(Expr_CollateData_Validate_Vars(session,
-                    Experiment, reference_path, output_path)) {
+            if(Expr_CollateData_Validate_Vars(
+                    session, Experiment, reference_path, output_path
+            )) {
                 withProgress(message = 'Collating IRFinder output', value = 0, {
-                    CollateData(Experiment, reference_path, output_path, 
-                        n_threads = get_threads_reactive())
+                    CollateData(
+                        Experiment, reference_path, output_path, 
+                        n_threads = get_threads_reactive()
+                    )
                 })
-                Expr_Update_colData(settings_expr$collate_path, 
+                Expr_Update_colData(
+                    settings_expr$collate_path, 
                     settings_expr$df.anno, settings_expr$df.files, 
                     settings_expr$bam_path, settings_expr$irf_path, 
-                    session, post_CollateData = TRUE)   # saves / updates expr
-                output <- .server_expr_parse_collate_path(limited = limited,
+                    session, post_CollateData = TRUE
+                )   # saves / updates expr
+                output <- .server_expr_parse_collate_path(
+                    limited = limited,
                     settings_expr = reactiveValuesToList(settings_expr), 
-                    output = output)    # updates status boxes
+                    output = output
+                )    # updates status boxes
             }
         })
 
-    # Running MakeSE (Only available on limited == TRUE)
+        # Running MakeSE (Only available on limited == TRUE)
         observeEvent(input$build_expr, {
-            if(is_valid(settings_expr$collate_path) &&
+            if(
+                    is_valid(settings_expr$collate_path) &&
                     file.exists(file.path(
-                        settings_expr$collate_path, "colData.Rds"))) {
+                        settings_expr$collate_path, "colData.Rds"))
+            ) {
                 colData = as.data.table(settings_expr$df.anno)
                 withProgress(message = 'Loading NxtSE object', value = 0, {
                     tryCatch({
                         settings_expr$se = MakeSE(
-                            settings_expr$collate_path, colData)
+                            settings_expr$collate_path, colData
+                        )
                         .makeSE_sweetalert_finish(session)
                     }, error = function(e) {
                         .makeSE_sweetalert_error(session)
@@ -353,6 +367,7 @@ server_expr <- function(
     })
 }
 
+# Clear all info boxes
 .server_expr_clear_ref <- function(output) {
     output$fasta_source_infobox <- renderInfoBox(infoBox(""))
     output$gtf_source_infobox <- renderInfoBox(infoBox(""))
@@ -364,6 +379,7 @@ server_expr <- function(
     return(output)
 }
 
+# Check path contains valid NxtIRF reference
 .server_expr_check_ref_path <- function(ref_path) {
     if(is_valid(ref_path)) {
         ref_settings_file <- file.path(ref_path, "settings.Rds")
@@ -377,10 +393,11 @@ server_expr <- function(
     return("")
 }
 
+# Register ref_path into server
 .server_expr_parse_ref_path <- function(ref_path, output) {
     if(is_valid(ref_path)) {
         ref_settings_file <- file.path(ref_path, "settings.Rds")
-        ref_settings = readRDS(ref_settings_file)
+        ref_settings <- readRDS(ref_settings_file)
         output <- .server_expr_load_ref(ref_settings, 
             output)
         output$txt_reference_path_load <- renderText(
@@ -393,6 +410,7 @@ server_expr <- function(
     return(output)
 }
 
+# Filter df2 by the samples in df1
 .server_expr_sync_df <- function(df1, df2) {
     if(!is_valid(df2)) {
         return(data.frame(sample = df1$sample, stringsAsFactors = FALSE))
@@ -404,6 +422,7 @@ server_expr <- function(
     }
 }
 
+# Generate rHOT from df
 .server_expr_gen_HOT <- function(df, enable_select = FALSE) {
     if(is_valid(df) && is(df, "data.frame")) {
         rhandsontable(df, useTypes = TRUE, stretchH = "all",
@@ -413,39 +432,44 @@ server_expr <- function(
     }
 }
 
-.server_expr_load_ref = function(ref_settings, output) {
+# Load settings.Rds from NxtIRF reference to populate status boxes
+.server_expr_load_ref <- function(ref_settings, output) {
     ah <- ah_genome_record <- ah_gtf_record <- NULL
     fasta <- gtf <- mappa <- nonPA <- Black <- NULL
-    if("ah_genome" %in% names(ref_settings) &&
-            is_valid(ref_settings[["ah_genome"]])) {
-        ah = AnnotationHub()
+    if(
+            "ah_genome" %in% names(ref_settings) &&
+            is_valid(ref_settings[["ah_genome"]])
+    ) {
+        ah <- AnnotationHub()
         ah_genome_record <- tryCatch({
             basename(ah$sourceurl[
                 which(names(ah) == ref_settings[["ah_genome"]])])
         }, error = function(e) NULL)
     }
-    if("ah_transcriptome" %in% names(ref_settings) &&
-            is_valid(ref_settings[["ah_transcriptome"]])) {
-        if(is.null(ah)) ah = AnnotationHub()
+    if(
+            "ah_transcriptome" %in% names(ref_settings) &&
+            is_valid(ref_settings[["ah_transcriptome"]])
+    ) {
+        if(is.null(ah)) ah <- AnnotationHub()
         ah_gtf_record <- tryCatch({
             basename(ah$sourceurl[
                 which(names(ah) == ref_settings[["ah_transcriptome"]])])
         }, error = function(e) NULL)
     }
     if(is.null(ah_genome_record) && "fasta_file" %in% names(ref_settings)) {
-        fasta = basename(ref_settings[["fasta_file"]])
+        fasta <- basename(ref_settings[["fasta_file"]])
     }
     if(is.null(ah_gtf_record) && "gtf_file" %in% names(ref_settings)) {
-        gtf = basename(ref_settings[["gtf_file"]])
+        gtf <- basename(ref_settings[["gtf_file"]])
     }
     if("MappabilityRef" %in% names(ref_settings)) {
-        mappa = basename(ref_settings[["MappabilityRef"]])
+        mappa <- basename(ref_settings[["MappabilityRef"]])
     }
     if("nonPolyARef" %in% names(ref_settings)) {
-        nonPA = basename(ref_settings[["nonPolyARef"]])
+        nonPA <- basename(ref_settings[["nonPolyARef"]])
     }
     if("BlacklistRef" %in% names(ref_settings)) {
-        Black = basename(ref_settings[["BlacklistRef"]])
+        Black <- basename(ref_settings[["BlacklistRef"]])
     }   
     output <- .server_expr_load_ref_genome(output, ah_genome_record, fasta)
     output <- .server_expr_load_ref_gtf(output, ah_gtf_record, gtf)
@@ -453,6 +477,7 @@ server_expr <- function(
     return(output)
 }
 
+# Add genome FASTA profile into server
 .server_expr_load_ref_genome <- function(output, ah_genome_record, fasta) {
     if(is_valid(ah_genome_record)) {
         output$fasta_source_infobox <- renderInfoBox({
@@ -478,6 +503,7 @@ server_expr <- function(
     return(output)
 }
 
+# Add annotation GTF profile into server
 .server_expr_load_ref_gtf <- function(output, ah_gtf_record, gtf) {
     if(is_valid(ah_gtf_record)) {
         output$gtf_source_infobox <- renderInfoBox({
@@ -503,6 +529,7 @@ server_expr <- function(
     return(output)
 }
 
+# Add miscellaneous reference data into server
 .server_expr_load_ref_misc <- function(output, mappa, nonPA, Black) {
     if(is_valid(mappa)) {
         output$mappa_source_infobox <- renderInfoBox({
@@ -552,16 +579,18 @@ server_expr <- function(
     return(output)
 }
 
-Expr_Load_BAMs = function(df.files, bam_path, session) {
-# First assume bams are named by subdirectory names
+# Given a BAM path, load BAM files to populate experiment
+Expr_Load_BAMs <- function(df.files, bam_path, session) {
     if(!is_valid(bam_path)) return(df.files)
-    temp.DT = Find_Samples(bam_path, suffix = ".bam", use_subdir = TRUE)
+
+    # First assume bams are named by subdirectory names
+    temp.DT <- Find_Samples(bam_path, suffix = ".bam", use_subdir = TRUE)
     if(!is.null(temp.DT) && nrow(temp.DT) > 0) {
-        temp.DT = as.data.table(temp.DT)
+        temp.DT <- as.data.table(temp.DT)
         if(length(unique(temp.DT$sample)) == nrow(temp.DT)) {
             # Assume subdirectory names designate sample names
         } else {
-            temp.DT = as.data.table(Find_Samples(
+            temp.DT <- as.data.table(Find_Samples(
                 bam_path, suffix = ".bam", use_subdir = FALSE))
             if(length(unique(temp.DT$sample)) == nrow(temp.DT)) {
             # Else assume bam names designate sample names
@@ -573,7 +602,7 @@ Expr_Load_BAMs = function(df.files, bam_path, session) {
                         "sample name,",
                         "or its parent directories are uniquely named."
                     ), type = "error")
-                temp.DT = NULL
+                temp.DT <- NULL
             }
         }
     } else {
@@ -584,14 +613,14 @@ Expr_Load_BAMs = function(df.files, bam_path, session) {
     }
     # compile experiment df with bam paths
     if(!is.null(temp.DT) && nrow(temp.DT) > 0)  {
-        colnames(temp.DT)[2] = "bam_file"
+        colnames(temp.DT)[2] <- "bam_file"
         if(is_valid(df.files)) {
-            df.files = update_data_frame(df.files, temp.DT)
+            df.files <- update_data_frame(df.files, temp.DT)
         } else {
-            DT = data.table(sample = temp.DT$sample,
+            DT <- data.table(sample = temp.DT$sample,
                 bam_file = "", irf_file = "", cov_file = "")
             DT[temp.DT, on = "sample", c("bam_file") := get("i.bam_file")]
-            df.files = as.data.frame(DT)
+            df.files <- as.data.frame(DT)
         }
         return(df.files)
     } else {
@@ -601,15 +630,21 @@ Expr_Load_BAMs = function(df.files, bam_path, session) {
 
 Expr_BAM_update_status <- function(df.files, bam_path, collate_path) {
     if(is_valid(df.files)) {
-        if(is_valid(bam_path) &&
+        if(
+                is_valid(bam_path) &&
                 "bam_file" %in% colnames(df.files) && 
-                all(file.exists(df.files$bam_file))) {
+                all(file.exists(df.files$bam_file))
+        ) {
             return(renderUI(ui_infobox_bam(bam_path, df.files$bam_file)))
-        } else if("irf_file" %in% colnames(df.files) && 
-                all(file.exists(df.files$irf_file))) {
+        } else if(
+                "irf_file" %in% colnames(df.files) && 
+                all(file.exists(df.files$irf_file))
+        ) {
             return(renderUI(ui_infobox_bam(bam_path, escape = TRUE)))
-        } else if(is_valid(collate_path) && 
-                file.exists(file.path(collate_path, "colData.Rds"))){
+        } else if(
+                is_valid(collate_path) && 
+                file.exists(file.path(collate_path, "colData.Rds"))
+        ) {
             return(renderUI(ui_infobox_bam(bam_path, escape = TRUE)))
         } else if("bam_file" %in% colnames(df.files)) {
             return(renderUI(ui_infobox_bam(bam_path, df.files$bam_file)))
@@ -619,62 +654,63 @@ Expr_BAM_update_status <- function(df.files, bam_path, collate_path) {
     } 
 }
 
-Expr_Load_IRFs = function(df.files, irf_path) {
+Expr_Load_IRFs <- function(df.files, irf_path) {
     if(!is_valid(irf_path)) return(df.files)
     # merge irfinder paths
-    temp.DT = Find_Samples(irf_path, suffix = ".txt.gz", use_subdir = FALSE)
+    temp.DT <- Find_Samples(irf_path, suffix = ".txt.gz", use_subdir = FALSE)
     if(!is.null(temp.DT) && nrow(temp.DT) > 0) {
-        temp.DT = as.data.table(temp.DT)
+        temp.DT <- as.data.table(temp.DT)
         if(length(unique(temp.DT$sample)) == nrow(temp.DT)) {
             # Assume output names designate sample names
         } else {
-            temp.DT = as.data.table(Find_Samples(
+            temp.DT <- as.data.table(Find_Samples(
                 irf_path, suffix = ".txt.gz", use_subdir = TRUE))
             if(length(unique(temp.DT$sample)) == nrow(temp.DT)) {
             # Else assume subdirectory names designate sample names
             } else {
-                temp.DT = NULL
+                temp.DT <- NULL
             }
         }
     } else {
-        temp.DT = NULL
+        temp.DT <- NULL
     }
     if(!is.null(temp.DT) && nrow(temp.DT) > 0) {
-        colnames(temp.DT)[2] = "irf_file"
+        colnames(temp.DT)[2] <- "irf_file"
         if(is_valid(df.files)) {
-            df.files = update_data_frame(df.files, temp.DT)
+            df.files <- update_data_frame(df.files, temp.DT)
         } else {
-            DT = data.table(sample = temp.DT$sample,
+            DT <- data.table(sample = temp.DT$sample,
                 bam_file = "", irf_file = "", cov_file = "")
             DT[temp.DT, on = "sample", c("irf_file") := get("i.irf_file")] 
-            df.files = as.data.frame(DT)      
+            df.files <- as.data.frame(DT)      
         }   
     }
-    temp.DT2 = Find_Samples(irf_path, suffix = ".cov", use_subdir = FALSE)
+    temp.DT2 <- Find_Samples(irf_path, suffix = ".cov", use_subdir = FALSE)
     if(!is.null(temp.DT2) && nrow(temp.DT2) > 0) {
-        temp.DT2 = as.data.table(temp.DT2)
+        temp.DT2 <- as.data.table(temp.DT2)
         if(length(unique(temp.DT2$sample)) == nrow(temp.DT2)) {
             # Assume output names designate sample names
         } else {
-            temp.DT2 = as.data.table(Find_Samples(
+            temp.DT2 <- as.data.table(Find_Samples(
                 irf_path, suffix = ".cov", use_subdir = TRUE))
             if(length(unique(temp.DT2$sample)) == nrow(temp.DT2)) {
         # Else assume subdirectory names designate sample names
             } else {
-                temp.DT2 = NULL
+                temp.DT2 <- NULL
             }
         }
     } else {
-        temp.DT2 = NULL
+        temp.DT2 <- NULL
     }
 # compile experiment df with irfinder paths
     if(!is.null(temp.DT2) && nrow(temp.DT2) > 0) {
-        colnames(temp.DT2)[2] = "cov_file"
-        df.files = update_data_frame(df.files, temp.DT2)
+        colnames(temp.DT2)[2] <- "cov_file"
+        df.files <- update_data_frame(df.files, temp.DT2)
     }
     return(df.files)
 }
 
+# Brings a prompt message asking do you really want to run IRFinder
 Expr_IRF_initiate_run <- function(input, session, n_threads, settings_expr) {
     if(!is_valid(settings_expr$df.files)) {
         sendSweetAlert(session = session, type = "error",
@@ -694,12 +730,12 @@ Expr_IRF_initiate_run <- function(input, session, n_threads, settings_expr) {
             text = "Please highlight cells of bam files to run IRFinder")
         return()        
     }
-    selected_rows = seq(input$hot_files_expr_select$select$r,
+    selected_rows <- seq(input$hot_files_expr_select$select$r,
         input$hot_files_expr_select$select$r2)
-    selected_cols = seq(input$hot_files_expr_select$select$c,
+    selected_cols <- seq(input$hot_files_expr_select$select$c,
         input$hot_files_expr_select$select$c2)
-    bam_col = which(colnames(settings_expr$df.files) == "bam_file")
-    bam_files = settings_expr$df.files$bam_file[selected_rows]
+    bam_col <- which(colnames(settings_expr$df.files) == "bam_file")
+    bam_files <- settings_expr$df.files$bam_file[selected_rows]
     if(!is_valid(settings_expr$ref_path)) {
         sendSweetAlert(session = session,
             title = "Missing Reference", type = "error",
@@ -717,20 +753,22 @@ Expr_IRF_initiate_run <- function(input, session, n_threads, settings_expr) {
         sendSweetAlert(session = session, type = "error",
             title = "Missing IRFinder Reference",
             text = "IRFinder.ref.gz is missing")
-    } else if(!is_valid(settings_expr$irf_path) || 
-            !dir.exists(settings_expr$irf_path)) {
+    } else if(
+            !is_valid(settings_expr$irf_path) || 
+            !dir.exists(settings_expr$irf_path)
+    ) {
         sendSweetAlert(session = session, type = "error",
             title = "Missing IRFinder output path",
             text = "Please set IRFinder output path")
     } else {
-        n_threads = min(n_threads, length(selected_rows))
+        n_threads <- min(n_threads, length(selected_rows))
         if(n_threads < length(selected_rows)) {
-            n_rounds = ceiling(length(selected_rows) / n_threads)
-            n_threads = ceiling(length(selected_rows) / n_rounds)
+            n_rounds <- ceiling(length(selected_rows) / n_threads)
+            n_threads <- ceiling(length(selected_rows) / n_rounds)
         }
-        msg = paste("Run IRFinder on", length(selected_rows), "samples?",
-            "Estimated runtime", 10 * 
-                ceiling(length(selected_rows) / n_threads),
+        msg <- paste("Run IRFinder on", length(selected_rows), "samples?",
+            "Estimated runtime", 
+                10 * ceiling(length(selected_rows) / n_threads),
             "minutes using", n_threads, 
             "threads (10min per BAM @ 100 million reads per sample)"
         )
@@ -741,14 +779,15 @@ Expr_IRF_initiate_run <- function(input, session, n_threads, settings_expr) {
     }
 }
 
+# After user confirms, actually call IRFinder
 Expr_IRF_actually_run <- function(input, session, n_threads, settings_expr) {
-    n_threads = min(n_threads, length(settings_expr$selected_rows))
-    n_rounds = ceiling(length(settings_expr$selected_rows) / n_threads)
-    n_threads = ceiling(length(settings_expr$selected_rows) / n_rounds)
+    n_threads   <- min(n_threads, length(settings_expr$selected_rows))
+    n_rounds    <- ceiling(length(settings_expr$selected_rows) / n_threads)
+    n_threads   <- ceiling(length(settings_expr$selected_rows) / n_rounds)
     if(n_threads == 1) {
         # run IRFinder using single thread
         withProgress(message = 'Running IRFinder', value = 0, {
-            i_done = 0
+            i_done <- 0
             incProgress(0.001, 
                 message = paste('Running IRFinder',
                     i_done, "of", length(settings_expr$selected_rows), "done")
@@ -760,9 +799,10 @@ Expr_IRF_actually_run <- function(input, session, n_threads, settings_expr) {
                     reference_path = settings_expr$ref_path,
                     output_path = settings_expr$irf_path,
                     n_threads = 1,
-                    run_featureCounts = FALSE            
+                    run_featureCounts = FALSE,
+                    verbose = TRUE                    
                 )
-                i_done = i_done + 1
+                i_done <- i_done + 1
                 incProgress(1 / length(settings_expr$selected_rows), 
                     message = paste(i_done, "of", 
                         length(settings_expr$selected_rows), "done")
@@ -771,18 +811,19 @@ Expr_IRF_actually_run <- function(input, session, n_threads, settings_expr) {
         })
     } else if(n_threads <= length(settings_expr$selected_rows)) {
         # extract subset to run in parallel
-        row_starts = seq(settings_expr$selected_rows[1], by = n_threads,
+        row_starts <- seq(settings_expr$selected_rows[1], by = n_threads,
             length.out = n_rounds)
         withProgress(message = 'Running IRFinder - Multi-threaded', value = 0, {
-            i_done = 0
+            i_done <- 0
             incProgress(0.001, 
                 message = paste('Running IRFinder - Multi-threaded,',
-                i_done, "of", length(settings_expr$selected_rows), "done")
+                    i_done, "of", length(settings_expr$selected_rows), "done")
             )
             for(i in seq_len(n_rounds)) {
-                selected_rows_subset = seq(row_starts[i], 
+                selected_rows_subset <- seq(
+                    row_starts[i], 
                     min(length(settings_expr$selected_rows), 
-                    row_starts[i] + n_threads - 1)
+                        row_starts[i] + n_threads - 1)
                 )
                 IRFinder(
                     bamfiles = settings_expr$df.files$
@@ -792,9 +833,10 @@ Expr_IRF_actually_run <- function(input, session, n_threads, settings_expr) {
                     reference_path = settings_expr$ref_path,
                     output_path = settings_expr$irf_path,
                     n_threads = n_threads,
-                    run_featureCounts = FALSE                  
+                    run_featureCounts = FALSE,
+                    verbose = TRUE
                 )                        
-                i_done = i_done + n_threads
+                i_done <- i_done + n_threads
                 incProgress(n_threads / length(settings_expr$selected_rows), 
                     message = paste(i_done, "of", 
                         length(settings_expr$selected_rows), "done")
@@ -809,11 +851,12 @@ Expr_IRF_actually_run <- function(input, session, n_threads, settings_expr) {
     )
 }
 
+# Check IRFinder path contains IRFinder output or not
 .server_expr_check_irf_path <- function(df.files, irf_path, output) {
     if(is_valid(df.files) && "irf_file" %in% colnames(df.files)) {
-        irf_files = df.files$irf_file
+        irf_files <- df.files$irf_file
     } else {
-        irf_files = NULL
+        irf_files <- NULL
     }
     output$irf_expr_infobox <- renderUI({
         ui_infobox_irf(irf_path, irf_files)
@@ -821,8 +864,9 @@ Expr_IRF_actually_run <- function(input, session, n_threads, settings_expr) {
     return(output)
 }
 
-Expr_Load_Anno = function(df.anno, df.files, anno_file, session) {
-    temp.DT = tryCatch(fread(anno_file), error = function(e) NULL)
+# Load annotation file
+Expr_Load_Anno <- function(df.anno, df.files, anno_file, session) {
+    temp.DT <- tryCatch(fread(anno_file), error = function(e) NULL)
     if(!is_valid(temp.DT)) return(df.anno)
     if(nrow(temp.DT) == 0) return(df.anno)
     if(!("sample" %in% colnames(temp.DT))) {
@@ -834,30 +878,34 @@ Expr_Load_Anno = function(df.anno, df.files, anno_file, session) {
         )
         return(df.anno)
     }
-    files_header = c("bam_file", "irf_file", "cov_file")
-    anno_header = names(temp.DT)[!(names(temp.DT) %in% files_header)]
-    temp.DT.files = copy(temp.DT)
+    
+    files_header <- c("bam_file", "irf_file", "cov_file")
+    anno_header <- names(temp.DT)[!(names(temp.DT) %in% files_header)]
+    temp.DT.files <- copy(temp.DT)
     if(length(anno_header) > 0) temp.DT.files[, c(anno_header) := NULL]
     if(is_valid(df.files)) {
-        df.files = update_data_frame(df.files, temp.DT.files)
+        df.files <- update_data_frame(df.files, temp.DT.files)
     } else {
-        DT = data.table(sample = temp.DT$sample, bam_file = "", irf_file = "",
-            cov_file = "")
-        df.files = update_data_frame(DT, temp.DT.files)
+        DT <- data.table(
+            sample = temp.DT$sample, bam_file = "", 
+            irf_file = "", cov_file = ""
+        )
+        df.files <- update_data_frame(DT, temp.DT.files)
     }
-    temp.DT.anno = copy(temp.DT)
-    files_header_exist = intersect(files_header, names(temp.DT))
+    temp.DT.anno <- copy(temp.DT)
+    files_header_exist <- intersect(files_header, names(temp.DT))
     if(length(files_header_exist) > 0) {
         temp.DT.anno[, c(files_header_exist):= NULL]
     }
     if(is_valid(df.anno)) {
-        df.anno = update_data_frame(df.anno, temp.DT.anno)
+        df.anno <- update_data_frame(df.anno, temp.DT.anno)
     } else {
-        df.anno = temp.DT.files
+        df.anno <- temp.DT.files
     }
     return(df.anno)
 }
 
+# Check if savestate df is identical to loaded df
 .server_expr_check_savestate <- function(settings_expr) {
     return(
         identical(settings_expr$df.anno_savestate, settings_expr$df.anno) &&
@@ -873,10 +921,13 @@ Expr_Load_Anno = function(df.anno, df.files, anno_file, session) {
     }
 }
 
+# Checks collate path and report status
 .server_expr_parse_collate_path_limited <- function(settings_expr, output) {
     if(is_valid(settings_expr$se)) {
-        if(ncol(settings_expr$df.anno) > 1 &&
-                .server_expr_check_savestate(settings_expr)) {
+        if(
+                ncol(settings_expr$df.anno) > 1 &&
+                .server_expr_check_savestate(settings_expr)
+        ) {
             output$se_expr_infobox <- renderUI(
                 ui_infobox_expr(3, "NxtSE Loaded"))
         } else if(ncol(settings_expr$df.anno) > 1) {
@@ -888,11 +939,15 @@ Expr_Load_Anno = function(df.anno, df.files, anno_file, session) {
                 ui_infobox_expr(1, "NxtSE Loaded",
                     "Consider adding one or more conditions to Annotations"))
         }
-    } else if(is_valid(settings_expr$collate_path) &&
+    } else if(
+            is_valid(settings_expr$collate_path) &&
             file.exists(file.path(
-                settings_expr$collate_path, "NxtSE.rds"))) {
-        if(ncol(settings_expr$df.anno) > 1 && 
-                .server_expr_check_savestate(settings_expr)) {
+                settings_expr$collate_path, "NxtSE.rds"))
+    ) {
+        if(
+                ncol(settings_expr$df.anno) > 1 && 
+                .server_expr_check_savestate(settings_expr)
+        ) {
             output$se_expr_infobox <- renderUI(
                 ui_infobox_expr(2, "NxtSE ready to load",
                     "Click `Build SummarizedExperiment`"))
@@ -906,9 +961,11 @@ Expr_Load_Anno = function(df.anno, df.files, anno_file, session) {
                 ui_infobox_expr(1, "NxtSE ready to load",
                     "Consider adding conditions to Annotations"))
         }
-    } else if(is_valid(settings_expr$collate_path) &&
+    } else if(
+            is_valid(settings_expr$collate_path) &&
             is_valid(settings_expr$df.files) &&
-            all(file.exists(settings_expr$df.files$irf_file))) {
+            all(file.exists(settings_expr$df.files$irf_file))
+    ) {
         output$se_expr_infobox <- renderUI(
             ui_infobox_expr(1, "NxtSE not collated",
                 "Run CollateData via Experiment tab"))
@@ -924,25 +981,32 @@ Expr_Load_Anno = function(df.anno, df.files, anno_file, session) {
     return(output)
 }
 
+# Checks collate path and report status
 .server_expr_parse_collate_path_full <- function(settings_expr, output) {
-    if(is_valid(settings_expr$collate_path) &&
-        file.exists(file.path(settings_expr$collate_path, "NxtSE.rds"))) {
-            if(.server_expr_check_savestate(settings_expr)) {
-                output$se_expr_infobox <- renderUI(
-                    ui_infobox_expr(3, "NxtSE ready to load", 
-                        "Load via Analysis -> Load Experiment"))
-            } else {
-                output$se_expr_infobox <- renderUI(
-                    ui_infobox_expr(2, "NxtSE ready to load", 
-                        "Don't forget to save your experiment"))
-            }
-    } else if(is_valid(settings_expr$collate_path) &&
+    if(
+            is_valid(settings_expr$collate_path) &&
+            file.exists(file.path(settings_expr$collate_path, "NxtSE.rds"))
+    ) {
+        if(.server_expr_check_savestate(settings_expr)) {
+            output$se_expr_infobox <- renderUI(
+                ui_infobox_expr(3, "NxtSE ready to load", 
+                    "Load via Analysis -> Load Experiment"))
+        } else {
+            output$se_expr_infobox <- renderUI(
+                ui_infobox_expr(2, "NxtSE ready to load", 
+                    "Don't forget to save your experiment"))
+        }
+    } else if(
+            is_valid(settings_expr$collate_path) &&
             is_valid(settings_expr$df.files) &&
-            all(file.exists(settings_expr$df.files$irf_file))) {
+            all(file.exists(settings_expr$df.files$irf_file))
+    ) {
         output$se_expr_infobox <- renderUI(
             ui_infobox_expr(2, "Ready to run NxtIRF-Collate"))
-    } else if(is_valid(settings_expr$collate_path) && 
-            is_valid(settings_expr$df.files)) {
+    } else if(
+            is_valid(settings_expr$collate_path) && 
+            is_valid(settings_expr$df.files)
+    ) {
         output$se_expr_infobox <- renderUI(
             ui_infobox_expr(1, "IRFinder files incomplete"))
     } else if(is_valid(settings_expr$collate_path)) {
@@ -955,9 +1019,12 @@ Expr_Load_Anno = function(df.anno, df.files, anno_file, session) {
     return(output)
 }
 
+# Save annotations to colData.Rds
 .server_expr_save_expr <- function(settings_expr, session) {
-    if(is_valid(settings_expr$collate_path) &&
-        file.exists(file.path(settings_expr$collate_path, "colData.Rds"))) {
+    if(
+            is_valid(settings_expr$collate_path) &&
+            file.exists(file.path(settings_expr$collate_path, "colData.Rds"))
+    ) {
         colData.Rds = list(
             df.anno = settings_expr$df.anno,
             df.files = settings_expr$df.files,
@@ -980,8 +1047,10 @@ Expr_Load_Anno = function(df.anno, df.files, anno_file, session) {
     }
 }
 
-Expr_CollateData_Validate_Vars <- function(session,
-        Experiment, reference_path, output_path) {
+# Check paths are legit before running CollateData()
+Expr_CollateData_Validate_Vars <- function(
+        session, Experiment, reference_path, output_path
+) {
     if(!is_valid(reference_path)) {
         sendSweetAlert(
             session = session,
@@ -1019,15 +1088,19 @@ Expr_CollateData_Validate_Vars <- function(session,
     return(TRUE)
 }
 
-Expr_Update_colData <- function(collate_path, df.anno, df.files, 
-        bam_path, irf_path, session, post_CollateData = FALSE) {
+# Sends sweetAlerts to show whether CollateData() has run successfully
+Expr_Update_colData <- function(
+        collate_path, df.anno, df.files, 
+        bam_path, irf_path, session, 
+        post_CollateData = FALSE)
+{
     if(file.exists(file.path(collate_path, "colData.Rds"))) {
-        colData.Rds = readRDS(file.path(collate_path, "colData.Rds"))
+        colData.Rds <- readRDS(file.path(collate_path, "colData.Rds"))
         if(all(colData.Rds$df.anno$sample %in% df.anno$sample)) {
-            colData.Rds$df.anno = df.anno
-            colData.Rds$df.files = df.files
-            colData.Rds$bam_path = bam_path
-            colData.Rds$irf_path = irf_path
+            colData.Rds$df.anno <- df.anno
+            colData.Rds$df.files <- df.files
+            colData.Rds$bam_path <- bam_path
+            colData.Rds$irf_path <- irf_path
             saveRDS(colData.Rds, file.path(collate_path, "colData.Rds"))
             if(post_CollateData) {
                 sendSweetAlert(
@@ -1046,11 +1119,12 @@ Expr_Update_colData <- function(collate_path, df.anno, df.files,
             }
         }
     } else if(is_valid(collate_path)) {
-        colData.Rds = list()
-        colData.Rds$df.anno = df.anno
-        colData.Rds$df.files = df.files
-        colData.Rds$bam_path = bam_path
-        colData.Rds$irf_path = irf_path        
+        # TODO: delete this if this does nothing!
+        colData.Rds <- list()
+        colData.Rds$df.anno <- df.anno
+        colData.Rds$df.files <- df.files
+        colData.Rds$bam_path <- bam_path
+        colData.Rds$irf_path <- irf_path        
     }
 }
 
