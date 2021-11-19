@@ -29,43 +29,15 @@ is_valid <- function(x) {
     }
 }
 
-#' Converts an IGV-style coordinate to a GenomicRanges object
-#'
-#' IGV-style coordinates typically have the syntax 
-#'   `seqnames:start-end/strand`\cr\cr
-#' For example: "chr3:10550-10730/+" or "X:51231-51330/-"
-#' @param coordinates A vector of strings containing the coordinates
-#'   to be converted
-#' @return A GRanges object that corresponds to the given coordinates
-#' @examples
-#' se = NxtIRF_example_NxtSE()
-#'
-#' coordinates = rowData(se)$EventRegion
-#'
-#' coords.gr = NxtIRF.CoordToGR(coordinates)
-#' @md
-#' @export
-NxtIRF.CoordToGR = function(coordinates) {
-    temp = tstrsplit(coordinates,split="/")
-    strand = as.character(temp[[2]])
-    temp2 = tstrsplit(temp[[1]],split=":")
-    seqnames = temp2[[1]]
-    temp3 = tstrsplit(temp2[[2]],split="-")
-    start = temp3[[1]]
-    end = temp3[[2]]
-    return(GRanges(seqnames = seqnames, ranges = IRanges(
-        start = as.numeric(start), end = as.numeric(end)),
-        strand = strand))
-}
-
-NxtIRF.CheckPackageInstalled <- function(
-        package = "DESeq2", version = "1.0.0", 
-        returntype = c("error", "warning", "silent")) {
-    res = tryCatch(
-        ifelse(packageVersion(package)>=version, TRUE, FALSE),
+.check_package_installed <- function(
+        package = "DESeq2", version = "0.0.0",
+        returntype = c("error", "warning", "silent")
+) {
+    res <- tryCatch(
+        ifelse(packageVersion(package) >= version, TRUE, FALSE),
         error = function(e) FALSE)
-    if(!res) {
-        returntype = match.arg(returntype)
+    if (!res) {
+        returntype <- match.arg(returntype)
         .log(paste(package, "version", version, "is not installed;",
             "and is required for this function"), type = returntype)
     }
@@ -95,34 +67,14 @@ NxtIRF.CheckPackageInstalled <- function(
 
 }
 
-NxtIRF.SplitVector <- function(vector = "", n_workers = 1) {
-    if(!is.numeric(n_workers) || n_workers < 1) {
-        .log("n_workers must be at least 1")
-    }
-    n_workers_use = as.integer(n_workers)
-    if(length(vector) < 1) {
-        .log("vector to split must be of length at least 1")
-    }
-    
-    if(n_workers_use > length(vector)) n_workers_use = length(vector)
-    vector_starts = round(seq(1, length(vector) + 1, 
-        length.out = n_workers_use + 1))
-    vector_starts = unique(vector_starts)
-    
-    return_val = list()
-    for(i in seq_len(length(vector_starts) - 1)) {
-        return_val[[i]] = vector[seq(vector_starts[i], vector_starts[i+1] - 1)]
-    }
-    return(return_val)
-}
-
-semi_join.DT = function(A, B, by, nomatch = 0) {
+# Semi-join a data.table. Equivalent to dplyr::semi_join(A, B, by = by)
+.semi_join_DT <- function(A, B, by, nomatch = 0) {
     A[A[B, on = by, which = TRUE, nomatch = nomatch]]
 }
 
+# Converts data table to GRanges object, preserving info
 .grDT <- function(DT, ...) {
-    # Converts data table to GRanges object, preserving info
-    if(nrow(DT) == 0) return(GenomicRanges::GRanges(NULL))
+    if (nrow(DT) == 0) return(GenomicRanges::GRanges(NULL))
     makeGRangesFromDataFrame(as.data.frame(DT), ...)
 }
 
@@ -130,81 +82,75 @@ semi_join.DT = function(A, B, by, nomatch = 0) {
     psetdiff(unlist(range(grl), use.names = TRUE), grl)
 }
 
+.make_path_relative <- function(files, relative_to) {
+    if (!all(file.exists(files))) .log("Some files do not exist")
+    if (!all(file.exists(relative_to))) .log("Some directories do not exist")
+    if (length(relative_to) == 1) relative_to <- rep(relative_to, length(files))
 
-
-make.path.relative = function(base, target) {
-    if(Sys.info()["sysname"] == "Windows") {
-        base = normalizePath(base, winslash = "/")
+    if (Sys.info()["sysname"] == "Windows") {
+        files <- normalizePath(files, winslash = "/")
+        relative_to <- normalizePath(relative_to, winslash = "/")
+    } else {
+        files <- normalizePath(files)
+        relative_to <- normalizePath(relative_to)
     }
-    common = sub('^([^|]*)[^|]*(?:\\|\\1[^|]*)$', '^\\1/?', 
-        paste0(base, '|', target))
-    
-    paste0(gsub('[^/]+/?', '../', sub(common, '', base)),
-        sub(common, '', target))
+    out <- c()
+    for (i in seq_len(length(files))) {
+        f <- files[i]
+        base <- relative_to[i]
+
+        common <- sub("^([^|]*)[^|]*(?:\\|\\1[^|]*)$", "^\\1/?",
+            paste0(base, "|", f))
+
+        out <- c(out, paste0(gsub("[^/]+/?", "../", sub(common, "", base)),
+            sub(common, "", f)))
+    }
+    return(out)
 }
 
-#' GGPLOT themes
-#'
-#' A ggplot theme object for white background figures without a legend
-#' @examples
-#' library(ggplot2)
-#' df <- data.frame(
-#'   gp = factor(rep(letters[1:3], each = 10)),
-#'   y = rnorm(30))
-#' ggplot(df, aes(gp, y)) +
-#'   geom_point() +
-#'   theme_white
-#' @export
-theme_white = theme(axis.line.x = element_line(colour = "black"),
-            panel.grid.major = element_line(size = rel(0.5), colour="grey"),
-            panel.grid.minor = element_blank(),
-            panel.border = element_blank(),
-            panel.background = element_blank(),
-            legend.position = "none",
-            axis.title.x.top = element_blank(),
-            # axis.text.x.bottom = element_blank(),
-            # axis.text.y = element_blank(),
-            axis.line.x.bottom = element_blank(),
-            axis.text=element_text(size=rel(1.0)),
-            plot.title = element_text(hjust = 0.5),
-            # axis.title.x=element_blank(),
-            # axis.title.y=element_blank()
-            )
-
-#' @describeIn theme_white White theme but with a figure legend (if applicable)
-#' @export
-theme_white_legend = theme(axis.line.x = element_line(colour = "black"),
-            panel.grid.major = element_line(size = rel(0.5), colour="grey"),
-            panel.grid.minor = element_blank(),
-            panel.border = element_blank(),
-            panel.background = element_blank(),
-            # legend.position = "none",
-            axis.title.x.top = element_blank(),
-            # axis.text.x.bottom = element_blank(),
-            # axis.text.y = element_blank(),
-            axis.line.x.bottom = element_blank(),
-            axis.text=element_text(size=rel(1.0)),
-            plot.title = element_text(hjust = 0.5),
-            # axis.title.x=element_blank(),
-            # axis.title.y=element_blank()
-            )
-
+# Compatibility for running inside a shiny withProgress block
 dash_progress <- function(message = "", total_items = 1, add_msg = FALSE) {
-    if(total_items != round(total_items) | total_items < 1) {
+    if (total_items != round(total_items) | total_items < 1) {
         .log("dash_progress needs at least 1 item")
     }
-    if(add_msg) {
-        message(message)
+    if (add_msg) {
+        .log(message, "message")
     }
-    if(!is.null(shiny::getDefaultReactiveDomain())) {
-        shiny::incProgress(1/total_items, message = message)
+    has_shiny <- .check_package_installed(
+        package = "shiny", returntype = "silent")
+    if (has_shiny) {
+        session <- shiny::getDefaultReactiveDomain()
+        if (!is.null(session)) {
+            shiny::incProgress(1 / total_items, message = message)
+        }
     }
 }
 
-#' Retrieves a data frame containing names and paths of example BAM files
-#'
-#' Intended to be run using the NxtIRF mock reference genome and gene 
-#' annotations
+# Equivalent to shiny::withProgress with compatibility if shiny is missing.
+dash_withProgress <- function(expr, min = 0, max = 1,
+    value = min + (max - min) * 0.1,
+    message = NULL, detail = NULL,
+    # style = getShinyOption("progress.style", default = "notification"),
+    # session = getDefaultReactiveDomain(),
+    env = parent.frame(), quoted = FALSE
+) {
 
-
+    has_shiny <- .check_package_installed(
+        package = "shiny", returntype = "silent")
+    if (has_shiny) {
+        session <- shiny::getDefaultReactiveDomain()
+        if (!is.null(session)) {
+            shiny::withProgress(expr = expr, min = min, max = max,
+                value = value, message = message, detail = detail,
+                env = env, quoted = quoted
+            )
+        } else {
+            if (!quoted) expr <- substitute(expr)
+            eval(expr, env)
+        }
+    } else {
+        if (!quoted) expr <- substitute(expr)
+        eval(expr, env)
+    }
+}
 

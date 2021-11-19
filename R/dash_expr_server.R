@@ -584,14 +584,14 @@ Expr_Load_BAMs <- function(df.files, bam_path, session) {
     if(!is_valid(bam_path)) return(df.files)
 
     # First assume bams are named by subdirectory names
-    temp.DT <- Find_Samples(bam_path, suffix = ".bam", use_subdir = TRUE)
+    temp.DT <- Find_Samples(bam_path, suffix = ".bam", level = 1)
     if(!is.null(temp.DT) && nrow(temp.DT) > 0) {
         temp.DT <- as.data.table(temp.DT)
         if(length(unique(temp.DT$sample)) == nrow(temp.DT)) {
             # Assume subdirectory names designate sample names
         } else {
             temp.DT <- as.data.table(Find_Samples(
-                bam_path, suffix = ".bam", use_subdir = FALSE))
+                bam_path, suffix = ".bam", level = 0))
             if(length(unique(temp.DT$sample)) == nrow(temp.DT)) {
             # Else assume bam names designate sample names
             } else {
@@ -657,14 +657,14 @@ Expr_BAM_update_status <- function(df.files, bam_path, collate_path) {
 Expr_Load_IRFs <- function(df.files, irf_path) {
     if(!is_valid(irf_path)) return(df.files)
     # merge irfinder paths
-    temp.DT <- Find_Samples(irf_path, suffix = ".txt.gz", use_subdir = FALSE)
+    temp.DT <- Find_Samples(irf_path, suffix = ".txt.gz", level = 0)
     if(!is.null(temp.DT) && nrow(temp.DT) > 0) {
         temp.DT <- as.data.table(temp.DT)
         if(length(unique(temp.DT$sample)) == nrow(temp.DT)) {
             # Assume output names designate sample names
         } else {
             temp.DT <- as.data.table(Find_Samples(
-                irf_path, suffix = ".txt.gz", use_subdir = TRUE))
+                irf_path, suffix = ".txt.gz", level = 1))
             if(length(unique(temp.DT$sample)) == nrow(temp.DT)) {
             # Else assume subdirectory names designate sample names
             } else {
@@ -685,14 +685,14 @@ Expr_Load_IRFs <- function(df.files, irf_path) {
             df.files <- as.data.frame(DT)      
         }   
     }
-    temp.DT2 <- Find_Samples(irf_path, suffix = ".cov", use_subdir = FALSE)
+    temp.DT2 <- Find_Samples(irf_path, suffix = ".cov", level = 0)
     if(!is.null(temp.DT2) && nrow(temp.DT2) > 0) {
         temp.DT2 <- as.data.table(temp.DT2)
         if(length(unique(temp.DT2$sample)) == nrow(temp.DT2)) {
             # Assume output names designate sample names
         } else {
             temp.DT2 <- as.data.table(Find_Samples(
-                irf_path, suffix = ".cov", use_subdir = TRUE))
+                irf_path, suffix = ".cov", level = 1))
             if(length(unique(temp.DT2$sample)) == nrow(temp.DT2)) {
         # Else assume subdirectory names designate sample names
             } else {

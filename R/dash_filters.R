@@ -100,7 +100,8 @@ server_filters <- function(
         filter10 <- filterModule_server("filter10", r_filter10, conditionList)
         filter11 <- filterModule_server("filter11", r_filter11, conditionList)
         filter12 <- filterModule_server("filter12", r_filter12, conditionList)
-        
+
+
         # Function to process NxtSE with set filters
         processFilters <- function() {
             message("Refreshing filters")
@@ -108,9 +109,9 @@ server_filters <- function(
                 filterSummary <- rep(TRUE, nrow(get_se()))
                 if(is_valid(settings_filter$filters)) {
                     for(i in seq_len(12)) {
-                        if(!is.null(settings_filter$filters[[i]]$trigger)) {
+                        if(is_valid(settings_filter$filters[[i]]@filterType)) {
                             filterSummary <- filterSummary & runFilter(
-                                settings_filter$filters[[i]]$filterObj,
+                                settings_filter$filters[[i]],
                                 get_se()
                             )
                         } else {
@@ -119,7 +120,7 @@ server_filters <- function(
                     }
                 }
                 settings_filter$filterSummary <- filterSummary
-                message("Filtered ", sum(filterSummary == TRUE), " ASE events"))
+                message("Filtered ", sum(filterSummary == TRUE), " ASE events")
             }
         }
             
@@ -128,18 +129,19 @@ server_filters <- function(
             input$refresh_filters_Filters
         )}, {
             req(input$refresh_filters_Filters)
-            settings_filter$filters[[1]] = (reactiveValuesToList(filter1))
-            settings_filter$filters[[2]] = (reactiveValuesToList(filter2))
-            settings_filter$filters[[3]] = (reactiveValuesToList(filter3))
-            settings_filter$filters[[4]] = (reactiveValuesToList(filter4))
-            settings_filter$filters[[5]] = (reactiveValuesToList(filter5))
-            settings_filter$filters[[6]] = (reactiveValuesToList(filter6))
-            settings_filter$filters[[7]] = (reactiveValuesToList(filter7))
-            settings_filter$filters[[8]] = (reactiveValuesToList(filter8))
-            settings_filter$filters[[9]] = (reactiveValuesToList(filter9))
-            settings_filter$filters[[10]] = (reactiveValuesToList(filter10))
-            settings_filter$filters[[11]] = (reactiveValuesToList(filter11))
-            settings_filter$filters[[12]] = (reactiveValuesToList(filter12))            processFilters()
+            # settings_filter$filters[[1]] <- filter1()()
+            # settings_filter$filters[[2]] <- filter2()()
+            # settings_filter$filters[[3]] <- filter3()()
+            # settings_filter$filters[[4]] <- filter4()()
+            # settings_filter$filters[[5]] <- filter5()()
+            # settings_filter$filters[[6]] <- filter6()()
+            # settings_filter$filters[[7]] <- filter7()()
+            # settings_filter$filters[[8]] <- filter8()()
+            # settings_filter$filters[[9]] <- filter9()()
+            # settings_filter$filters[[10]] <- filter10()()
+            # settings_filter$filters[[11]] <- filter11()()
+            # settings_filter$filters[[12]] <- filter12()()
+            processFilters()
         })
         
         # Updates column chart based on changing applied filter, or log scale
@@ -170,18 +172,18 @@ server_filters <- function(
             selectedfile <- parseSavePath(volumes(), input$saveAnalysis_Filters)
             req(selectedfile$datapath)
 
-            settings_filter$filters[[1]] = (reactiveValuesToList(filter1))
-            settings_filter$filters[[2]] = (reactiveValuesToList(filter2))
-            settings_filter$filters[[3]] = (reactiveValuesToList(filter3))
-            settings_filter$filters[[4]] = (reactiveValuesToList(filter4))
-            settings_filter$filters[[5]] = (reactiveValuesToList(filter5))
-            settings_filter$filters[[6]] = (reactiveValuesToList(filter6))
-            settings_filter$filters[[7]] = (reactiveValuesToList(filter7))
-            settings_filter$filters[[8]] = (reactiveValuesToList(filter8))
-            settings_filter$filters[[9]] = (reactiveValuesToList(filter9))
-            settings_filter$filters[[10]] = (reactiveValuesToList(filter10))
-            settings_filter$filters[[11]] = (reactiveValuesToList(filter11))
-            settings_filter$filters[[12]] = (reactiveValuesToList(filter12))
+            # settings_filter$filters[[1]] <- filter1()()
+            # settings_filter$filters[[2]] <- filter2()()
+            # settings_filter$filters[[3]] <- filter3()()
+            # settings_filter$filters[[4]] <- filter4()()
+            # settings_filter$filters[[5]] <- filter5()()
+            # settings_filter$filters[[6]] <- filter6()()
+            # settings_filter$filters[[7]] <- filter7()()
+            # settings_filter$filters[[8]] <- filter8()()
+            # settings_filter$filters[[9]] <- filter9()()
+            # settings_filter$filters[[10]] <- filter10()()
+            # settings_filter$filters[[11]] <- filter11()()
+            # settings_filter$filters[[12]] <- filter12()()
             
             final <- settings_filter$filters
             saveRDS(final, selectedfile$datapath)

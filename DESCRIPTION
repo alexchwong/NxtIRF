@@ -62,20 +62,11 @@ Suggests:
 VignetteBuilder: knitr
 biocViews: Software, Transcriptomics, RNASeq, AlternativeSplicing, Coverage, 
   DifferentialSplicing
-Collate: AllImports.R
-	RcppExports.R
+Collate: 
+  AllImports.R
 	globals.R
-	AllClasses.R
-	AllGenerics.R
-	NxtSE-methods.R
-	zzz.R
-	wrappers.R
-	BuildRef.R
-	DE_IR.R
-	CollateData.R
 	filterModules_shiny.R
 	dash_settings.R
-	dash_utils.R
 	dash_ref_new_ui.R
 	dash_ref_new_server.R
 	dash_expr_ui.R
@@ -91,9 +82,8 @@ Collate: AllImports.R
 	dash_ui.R
 	dash_server.R
 	dash.R
-	STAR_utils.R
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 URL: https://github.com/alexchwong/NxtIRF
 BugReports: https://support.bioconductor.org/
 Config/testthat/edition: 3
