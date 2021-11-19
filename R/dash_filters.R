@@ -61,7 +61,11 @@ server_filters <- function(
 
         # Reactives to individual filter modules
         getFilterData <- function(i) {
-            if(is_valid(settings_filter$filters)) {
+            if(
+                is_valid(settings_filter$filters) &&
+                length(settings_filter$filters) >= i
+            
+            ) {
                 return(settings_filter$filters[[i]])
             } else {
                 return(list())
@@ -109,7 +113,10 @@ server_filters <- function(
                 filterSummary <- rep(TRUE, nrow(get_se()))
                 if(is_valid(settings_filter$filters)) {
                     for(i in seq_len(12)) {
-                        if(is_valid(settings_filter$filters[[i]]@filterType)) {
+                        if(
+                            length(settings_filter$filters) >= i &&
+                            is_valid(settings_filter$filters[[i]]@filterType)  
+                        ) {
                             filterSummary <- filterSummary & runFilter(
                                 settings_filter$filters[[i]],
                                 get_se()
@@ -121,6 +128,15 @@ server_filters <- function(
                 }
                 settings_filter$filterSummary <- filterSummary
                 message("Filtered ", sum(filterSummary == TRUE), " ASE events")
+            } else if(is_valid(settings_filter$filters)) {
+                for(i in seq_len(12)) {
+                    if(
+                        length(settings_filter$filters) >= i &&
+                        is_valid(settings_filter$filters[[i]]@filterType)  
+                    ) {
+                        print(settings_filter$filters[[i]])
+                    }
+                }
             }
         }
             
@@ -129,18 +145,18 @@ server_filters <- function(
             input$refresh_filters_Filters
         )}, {
             req(input$refresh_filters_Filters)
-            # settings_filter$filters[[1]] <- filter1()()
-            # settings_filter$filters[[2]] <- filter2()()
-            # settings_filter$filters[[3]] <- filter3()()
-            # settings_filter$filters[[4]] <- filter4()()
-            # settings_filter$filters[[5]] <- filter5()()
-            # settings_filter$filters[[6]] <- filter6()()
-            # settings_filter$filters[[7]] <- filter7()()
-            # settings_filter$filters[[8]] <- filter8()()
-            # settings_filter$filters[[9]] <- filter9()()
-            # settings_filter$filters[[10]] <- filter10()()
-            # settings_filter$filters[[11]] <- filter11()()
-            # settings_filter$filters[[12]] <- filter12()()
+            settings_filter$filters[[1]] <- filter1()
+            settings_filter$filters[[2]] <- filter2()
+            settings_filter$filters[[3]] <- filter3()
+            settings_filter$filters[[4]] <- filter4()
+            settings_filter$filters[[5]] <- filter5()
+            settings_filter$filters[[6]] <- filter6()
+            settings_filter$filters[[7]] <- filter7()
+            settings_filter$filters[[8]] <- filter8()
+            settings_filter$filters[[9]] <- filter9()
+            settings_filter$filters[[10]] <- filter10()
+            settings_filter$filters[[11]] <- filter11()
+            settings_filter$filters[[12]] <- filter12()
             processFilters()
         })
         
@@ -172,18 +188,18 @@ server_filters <- function(
             selectedfile <- parseSavePath(volumes(), input$saveAnalysis_Filters)
             req(selectedfile$datapath)
 
-            # settings_filter$filters[[1]] <- filter1()()
-            # settings_filter$filters[[2]] <- filter2()()
-            # settings_filter$filters[[3]] <- filter3()()
-            # settings_filter$filters[[4]] <- filter4()()
-            # settings_filter$filters[[5]] <- filter5()()
-            # settings_filter$filters[[6]] <- filter6()()
-            # settings_filter$filters[[7]] <- filter7()()
-            # settings_filter$filters[[8]] <- filter8()()
-            # settings_filter$filters[[9]] <- filter9()()
-            # settings_filter$filters[[10]] <- filter10()()
-            # settings_filter$filters[[11]] <- filter11()()
-            # settings_filter$filters[[12]] <- filter12()()
+            settings_filter$filters[[1]] <- filter1()
+            settings_filter$filters[[2]] <- filter2()
+            settings_filter$filters[[3]] <- filter3()
+            settings_filter$filters[[4]] <- filter4()
+            settings_filter$filters[[5]] <- filter5()
+            settings_filter$filters[[6]] <- filter6()
+            settings_filter$filters[[7]] <- filter7()
+            settings_filter$filters[[8]] <- filter8()
+            settings_filter$filters[[9]] <- filter9()
+            settings_filter$filters[[10]] <- filter10()
+            settings_filter$filters[[11]] <- filter11()
+            settings_filter$filters[[12]] <- filter12()
             
             final <- settings_filter$filters
             saveRDS(final, selectedfile$datapath)

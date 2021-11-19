@@ -66,7 +66,11 @@ filterModule_UI <- function(id, label = "Counter") {
 filterModule_server <- function(id, filterdata, conditionList) {
     moduleServer(id, function(input, output, session) {
         #final <- reactiveValues(default = NxtFilter()) # initialize to defaults
-        final <- reactiveVal(value = NxtFilter())
+        final <- reactiveVal(
+            value = NxtFilter(
+                filterClass = "(none)"
+            )
+        )
         # Observe whether colData of NxtSE changes
         
         observeEvent(conditionList(), {
@@ -94,7 +98,7 @@ filterModule_server <- function(id, filterdata, conditionList) {
                     choices = choices_conds, 
                     selected = "(none)"
                 )
-                return()
+                return(final)
             } else {
                 updateSelectInput(
                     session = session, 
@@ -108,7 +112,7 @@ filterModule_server <- function(id, filterdata, conditionList) {
         # inputs from final -> UI
         observeEvent(filterdata(), {
             if(is(filterdata(), "NxtFilter")) final(filterdata())
-            
+
             class_choices <- c("(none)", "Annotation", "Data")
             type_choices <- c("(none)")
 
@@ -129,7 +133,7 @@ filterModule_server <- function(id, filterdata, conditionList) {
                     inputId = "filterClass", choices = class_choices)
                 updateSelectInput(session = session, 
                     inputId = "filterType", choices = type_choices)
-                return()
+                # return(final)
             }
             
             fType <- final()@filterType
@@ -140,16 +144,26 @@ filterModule_server <- function(id, filterdata, conditionList) {
                 # fClass != "" & fClass != "(none)"
                 updateSelectInput(session = session, inputId = "filterType", 
                     choices = type_choices) # Sets default fType if not set
-                return()
+                # return(final)
             } else {
                 # Invalid fClass
                 updateSelectInput(session = session, 
                     inputId = "filterClass", choices = class_choices)
                 updateSelectInput(session = session, 
                     inputId = "filterType", choices = type_choices)
-                return()
+                # return(final)
             }
+
+            feType <- final()@EventTypes
+            eOptions <- c("IR", "MXE", "SE", "A3SS", "A5SS", "ALE", "AFE", "RI")
             
+            # make sure feType is always valid
+            if(length(feType) > 0) feType <- feType[feType %in% eOptions]
+            if(length(feType) == 0) feType <- eOptions
+            updateSelectInput(session = session, 
+                inputId = "EventType", 
+                selected = feType)
+
             fMin <- final()@minimum # always valid
             if(fType == "Depth") {
                 shinyWidgets::updateSliderTextInput(
@@ -198,16 +212,6 @@ filterModule_server <- function(id, filterdata, conditionList) {
             updateSliderInput(session = session, 
                 inputId = "slider_pcTRUE", 
                 value = fpcTRUE)
-            
-            feType <- final()@EventTypes
-            eOptions <- c("IR", "MXE", "SE", "A3SS", "A5SS", "ALE", "AFE", "RI")
-            
-            # make sure feType is always valid
-            if(length(feType) > 0) feType <- feType[feType %in% eOptions]
-            if(length(feType) == 0) feType <- eOptions
-            updateSelectInput(session = session, 
-                inputId = "EventType", 
-                selected = feType)
         })
 
         # outputs from UI -> final
