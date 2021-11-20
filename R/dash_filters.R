@@ -1,6 +1,7 @@
 ui_filters <- function(id) {
     ns <- NS(id)
     wellPanel(
+        .ui_notice(),
         fluidRow(
             column(4,
                 wellPanel(style = "overflow-y:scroll; max-height: 800px",

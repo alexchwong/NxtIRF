@@ -14,6 +14,7 @@ ui_DE <- function(id) {
         DE_opts <- ("(none) - please install limma, DESeq2 or DoubleExpSeq")
     }
     fluidRow(
+        .ui_notice(),
         column(4,
             textOutput(ns("warning_DE")),
             selectInput(ns('method_DE'), 'Method', 

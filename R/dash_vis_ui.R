@@ -1,6 +1,7 @@
 ui_vis_diag <- function(id) {
     ns <- NS(id)
     wellPanel(
+        .ui_notice(),
         fluidRow(
             column(3,
                 shinyWidgets::sliderTextInput(
@@ -37,6 +38,7 @@ ui_vis_diag <- function(id) {
 ui_vis_volcano <- function(id) {
     ns <- NS(id)
     wellPanel(
+        .ui_notice(),
         fluidRow(
             column(3,    
                 shinyWidgets::sliderTextInput(
@@ -72,6 +74,7 @@ ui_vis_volcano <- function(id) {
 ui_vis_heatmap <- function(id) {
     ns <- NS(id)
     wellPanel(
+        .ui_notice(),
         fluidRow(
             column(3, 
                 shinyWidgets::radioGroupButtons(ns("select_events_heat"), 

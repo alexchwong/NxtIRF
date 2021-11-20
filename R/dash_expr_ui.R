@@ -1,6 +1,7 @@
 ui_expr <- function(id) {
     ns <- NS(id)
-    wellPanel( 
+    wellPanel(
+        .ui_notice(),
         fluidRow(
             uiOutput(ns("ref_expr_infobox")),
             uiOutput(ns("bam_expr_infobox")),

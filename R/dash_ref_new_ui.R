@@ -1,6 +1,7 @@
 ui_ref_new <- function(id) {
     ns <- NS(id)
     fluidRow(
+        .ui_notice(),
         column(5,
             h4("Select Reference Directory"),
             tags$div(title = paste("Specify (or create) a directory for NxtIRF",

@@ -1,6 +1,7 @@
 ui_qc <- function(id) {
     ns <- NS(id)
     wellPanel(
+        .ui_notice(),
         fluidRow(
             column(2,
                 selectInput(ns('QCmode'), 'Mode', width = '100%',

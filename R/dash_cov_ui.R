@@ -1,6 +1,7 @@
 ui_cov <- function(id) {
     ns <- NS(id)
     wellPanel(
+        .ui_notice(),
         fluidRow(style='height:20vh',
             column(4, 
                 textOutput(ns("warning_cov")),

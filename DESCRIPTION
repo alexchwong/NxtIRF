@@ -52,6 +52,7 @@ Collate:
   AllImports.R
 	globals.R
 	filterModules_shiny.R
+	dash_globals.R
 	dash_settings.R
 	dash_ref_new_ui.R
 	dash_ref_new_server.R

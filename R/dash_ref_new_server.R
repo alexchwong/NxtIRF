@@ -378,7 +378,9 @@ server_ref_new <- function(id, refresh_tab, volumes) {
     temp <- ""
     tryCatch({
         temp <- get_mappability_exclusion(
-            genome_type, as_type = "bed", path)        
+            genome_type, as_type = "bed", path)
+    }, error = function(e) {
+        temp <- ""
     })
     if(file.exists(temp)) {
         return(temp)
