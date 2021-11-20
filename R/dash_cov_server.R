@@ -38,7 +38,7 @@ server_cov <- function(
             input$chr_cov
         })
         start_r <- reactive({
-            req(nput$start_cov)
+            req(input$start_cov)
             
             input$start_cov
         })
