@@ -352,7 +352,8 @@ server_expr <- function(
                 withProgress(message = 'Loading NxtSE object', value = 0, {
                     tryCatch({
                         settings_expr$se = MakeSE(
-                            settings_expr$collate_path, colData
+                            settings_expr$collate_path, colData,
+                            realize = TRUE
                         )
                         .makeSE_sweetalert_finish(session)
                     }, error = function(e) {
