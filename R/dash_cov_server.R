@@ -108,6 +108,7 @@ server_cov <- function(
                         settings_Cov$final_plot
                     )
                 })
+                .server_cov_plot_change_mode(session, input$graph_mode_cov)
             }
         })
         
