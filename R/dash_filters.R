@@ -118,8 +118,8 @@ server_filters <- function(
                             is_valid(settings_filter$filters[[i]]@filterType)  
                         ) {
                             filterSummary <- filterSummary & runFilter(
-                                settings_filter$filters[[i]],
-                                get_se()
+                                get_se(),
+                                settings_filter$filters[[i]]
                             )
                         } else {
                             # message(paste("Trigger", i, "is NULL"))
