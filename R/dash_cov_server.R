@@ -328,7 +328,7 @@ server_cov_get_all_tracks <- function(input) {
         
         condense_tracks = input$condense_cov,
         stack_tracks = input$stack_tracks_cov,
-        t_test = input$pairwise_t_cov,
+        t_test = input$pairwise_t_cov
 
         # graph_mode = input$graph_mode_cov,
     )
