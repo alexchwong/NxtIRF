@@ -1,7 +1,7 @@
 Package: NxtIRF
 Title: Graphical User Interface for High Performance BAM-based binary
     alternative splicing event quantitation, differential analysis, and 
-		visualisation.
+		visualisation
 Version: 0.99.0
 Date: 2021-11-18
 Authors@R: c(person("Alex Chit Hei", "Wong", email="a.wong@centenary.org.au", 
@@ -19,10 +19,9 @@ Description: Interactive user-friendly GUI to analyse RNA-seq data for
 		statistical tools, and interactively visualise results.
 License: MIT + file LICENSE
 Depends:
-  NxtIRFcore
+  NxtIRFcore, NxtIRFdata
 Imports:
-	methods, stats, utils, graphics, R.utils, magrittr, tools,
-	Rcpp (>= 1.0.5),
+	methods, stats, utils, magrittr,
 	data.table,
 	fst,
 	shiny,
@@ -31,37 +30,24 @@ Imports:
 	shinydashboard,
 	rhandsontable,
 	ggplot2,
-	AnnotationHub, ExperimentHub, BiocFileCache,
+	AnnotationHub,
 	BiocGenerics,
-	Biostrings,
 	BiocParallel,
-	DelayedArray,
-	DelayedMatrixStats,
 	DT,
-	genefilter,
 	grDevices,
 	GenomeInfoDb,
 	GenomicRanges,
-	HDF5Array,
 	heatmaply,
-	httr,
-	IRanges,
-	openssl,
+	matrixStats,
 	parallel,
 	plotly,
-	rhdf5,
-	rtracklayer,
 	RColorBrewer,
-	stringr,
-	SummarizedExperiment,
-	S4Vectors,
 	XML
 Suggests: 
-    knitr, rmarkdown, pheatmap,
-    DESeq2, limma, Rsubread, testthat (>= 3.0.0)
+    knitr, rmarkdown, DESeq2, limma, DoubleExpSeq, Rsubread, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 biocViews: Software, Transcriptomics, RNASeq, AlternativeSplicing, Coverage, 
-  DifferentialSplicing
+  DifferentialSplicing, DifferentialExpression, GUI
 Collate: 
   AllImports.R
 	globals.R

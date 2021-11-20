@@ -8,13 +8,16 @@
 #'   and height of the NxtIRF app.
 #' @return An interactive shinydashboard NxtIRF app runs.
 #' @examples
-#' \dontrun{
+#' if(interactive()) {
+#' 
 #' # Launches interactive ShinyDashboard NxtIRF app as fixed-size dialog box
-#' nxtIRF(mode = "dialog", width = 1600, height = 900) 
+#'     nxtIRF(mode = "dialog", width = 1600, height = 900) 
 #'
 #' # Launches interactive ShinyDashboard NxtIRF app as browser window
-#' nxtIRF(mode = "browser") 
+#'     nxtIRF(mode = "browser")
+#' 
 #' }
+#' 
 #' @md
 #' @export
 nxtIRF <- function(mode = c("dialog", "browser"), 

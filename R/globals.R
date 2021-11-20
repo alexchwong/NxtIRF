@@ -55,10 +55,10 @@ is_valid <- function(x) {
     if(as_BPPARAM) {
         if(Sys.info()["sysname"] == "Windows") {
             BPPARAM_mod = BiocParallel::SnowParam(n_threads_to_use, ...)
-            message(paste("Using SnowParam", BPPARAM_mod$workers, "threads"))
+            message("Using SnowParam ", BPPARAM_mod$workers, " threads")
         } else {
             BPPARAM_mod = BiocParallel::MulticoreParam(n_threads_to_use, ...)
-            message(paste("Using MulticoreParam", BPPARAM_mod$workers, "threads"))
+            message("Using MulticoreParam ", BPPARAM_mod$workers, " threads")
         }
         return(BPPARAM_mod)
     } else {
@@ -112,10 +112,6 @@ update_data_frame <- function(existing_df, new_df) {
 .grDT <- function(DT, ...) {
     if (nrow(DT) == 0) return(GenomicRanges::GRanges(NULL))
     makeGRangesFromDataFrame(as.data.frame(DT), ...)
-}
-
-.grlGaps <- function(grl) {
-    psetdiff(unlist(range(grl), use.names = TRUE), grl)
 }
 
 .make_path_relative <- function(files, relative_to) {

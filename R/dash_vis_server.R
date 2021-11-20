@@ -139,7 +139,7 @@ server_vis_diag <- function(
             req(selectedfile$datapath)
 
             obj <- isolate(settings_Diag$final_plot)
-            plotly::orca(obj, make.path.relative(getwd(), 
+            plotly::orca(obj, .make_path_relative(getwd(), 
                 selectedfile$datapath))
         })
 
@@ -391,7 +391,7 @@ server_vis_volcano <- function(
             req(selectedfile$datapath)
 
             obj <- isolate(settings_Volc$final_plot)
-            plotly::orca(obj, make.path.relative(
+            plotly::orca(obj, .make_path_relative(
                 getwd(), selectedfile$datapath))
         })
         
@@ -439,7 +439,7 @@ server_vis_heatmap <- function(
 
             validate(need(length(selected) > 0, "Select some Events first"))
 
-            colData <- as.data.frame(SummarizedExperiment::colData(get_se()))
+            colData <- as.data.frame(colData(get_se()))
 
             if(input$mode_heat == "PSI") {
                 mat <- make_matrix(get_se(), get_de()$EventName[selected],
@@ -504,7 +504,7 @@ server_vis_heatmap <- function(
             
             obj <- isolate(settings_Heat$final_plot)
             plotly::orca(obj, 
-                make.path.relative(getwd(), selectedfile$datapath))
+                .make_path_relative(getwd(), selectedfile$datapath))
         })
         
     })

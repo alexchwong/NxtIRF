@@ -225,7 +225,7 @@ server_ref_new <- function(id, refresh_tab, volumes) {
                         file.exists(args$MappabilityRef)
                 ) {
                     mappa_base <- basename(args$MappabilityRef)
-                    new_mappa_path <- file.path(reference_path, "Mappability")
+                    new_mappa_path <- file.path(args$reference_path, "Mappability")
                     new_mappa_file <- file.path(new_mappa_path, mappa_base)
                     
                     dir.create(new_mappa_path)

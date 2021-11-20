@@ -38,14 +38,14 @@ server_cov <- function(
             input$chr_cov
         })
         start_r <- reactive({
-            req(suppressWarnings(as.numeric(input$start_cov)))
+            req(nput$start_cov)
             
-            as.numeric(input$start_cov)
+            input$start_cov
         })
         end_r <- reactive({
-            req(suppressWarnings(as.numeric(input$end_cov)))
+            req(input$end_cov)
             
-            as.numeric(input$end_cov)
+            input$end_cov
         })
         tracks_r <- reactive({
             server_cov_get_all_tracks(input)
@@ -76,8 +76,8 @@ server_cov <- function(
             settings_Cov$plot_params <- .server_cov_refresh_plot_args(
                 get_se(), get_ref(), 
                 input$event_norm_cov, 
-                input$chr_cov, suppressWarnings(as.numeric(input$start_cov)), 
-                suppressWarnings(as.numeric(input$end_cov)), tracks, 
+                input$chr_cov, input$start_cov, 
+                input$end_cov, tracks, 
                 settings_Cov$plot_params, input
             )
             if(.server_cov_check_plot_args(settings_Cov$plot_params)) {
@@ -194,7 +194,7 @@ server_cov <- function(
             selectedfile <- parseSavePath(volumes(), input$saveplot_cov)
             req(selectedfile$datapath)
             plotly::orca(settings_Cov$final_plot, 
-                make.path.relative(getwd(), selectedfile$datapath),
+                .make_path_relative(getwd(), selectedfile$datapath),
                 width = 1920, height = 1080)
         })
     
@@ -222,8 +222,8 @@ server_cov_get_all_tracks <- function(input) {
         rows_all, rows_selected, num_events, selected_event, mode
 ) {
     if(!is.null(gene_list)) {
-        message(paste("Populating drop-down box with", 
-            length(unique(gene_list$gene_display_name)), "genes"))
+        message("Populating drop-down box with ", 
+            length(unique(gene_list$gene_display_name)), " genes")
         updateSelectInput(session = session, inputId = "chr_cov", 
             choices = c("(none)", 
                 as.character(sort(unique(gene_list$seqnames)))),
@@ -282,8 +282,8 @@ server_cov_get_all_tracks <- function(input) {
 # Updates dropdown of Event Norm options
 .server_cov_update_norm_event <- function(input, session, event.ranges) {
     view_chr <- isolate(input$chr_cov)
-    view_start <- suppressWarnings(as.numeric(isolate(input$start_cov)))
-    view_end <- suppressWarnings(as.numeric(isolate(input$end_cov)))
+    view_start <- isolate(input$start_cov)
+    view_end <- isolate(input$end_cov)
     selected_event <- isolate(input$events_cov)
     cur_event <- isolate(input$event_norm_cov)
     req(view_chr)
@@ -452,8 +452,8 @@ server_cov_get_all_tracks <- function(input) {
 
 # Zoom out
 .server_cov_zoom_out <- function(input, session, seqInfo) {
-    view_start  <- suppressWarnings(as.numeric(input$start_cov))
-    view_end    <- suppressWarnings(as.numeric(input$end_cov))
+    view_start  <- input$start_cov
+    view_end    <- input$end_cov
     req(view_start, view_end, view_end - view_start >= 50)
     
     seqmax      <- as.numeric(GenomeInfoDb::seqlengths(seqInfo))
@@ -475,8 +475,8 @@ server_cov_get_all_tracks <- function(input) {
 
 # Zoom in
 .server_cov_zoom_in <- function(input, session) {
-    view_start  <- suppressWarnings(as.numeric(input$start_cov))
-    view_end    <- suppressWarnings(as.numeric(input$end_cov))
+    view_start  <- input$start_cov
+    view_end    <- input$end_cov
     req(view_start, view_end, view_end - view_start >= 50)
     
     # get center of current range
@@ -524,8 +524,8 @@ server_cov_get_all_tracks <- function(input) {
 # Changes start and end coordinates, if over seqmax
 # also if changing to shorter chromosome and prev end > chrom length
 .server_cov_change_start_end <- function(input, session, output, seqmax) {
-    target_start    <- as.numeric(input$start_cov)
-    target_end      <- as.numeric(input$end_cov)
+    target_start    <- input$start_cov
+    target_end      <- input$end_cov
     req(target_end, target_start)
     
     if(target_end > seqmax) target_end <- seqmax
