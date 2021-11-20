@@ -15,7 +15,7 @@ server_DE <- function(
                 "Experiment Loaded"
             })
             req(get_se())
-            colcat = get_discrete_cats(get_se())
+            colcat = .get_discrete_cats(get_se())
             updateSelectInput(session = session, inputId = "variable_DE", 
                 choices = c("(none)", colcat), selected = "(none)")
             updateSelectInput(session = session, inputId = "batch1_DE", 
