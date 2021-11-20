@@ -5,19 +5,7 @@ server_DE <- function(
     moduleServer(id, function(input, output, session) {
         settings_DE <- setreactive_DE()
 
-        get_discrete_cats <- function(se) {
-            if(!is(se, "NxtSE")) return(NULL)
-            colData = colData(se)
-            if(ncol(colData) == 0) return(NULL)
-            
-            ret <- c()
-            for(colcat in colnames(colData)) {
-                if(is(colData[,input$variable_DE], "factor")) {
-                    ret <- c(ret, colcat)
-                }
-            }
-            return(ret)
-        }
+
 
         observeEvent(refresh_tab(), {
             output$warning_DE = renderText({
@@ -318,4 +306,18 @@ server_DE <- function(
     
         return(settings_DE)
     })
+}
+
+.get_discrete_cats <- function(se) {
+    if(!is(se, "NxtSE")) return(NULL)
+    colData = colData(se)
+    if(ncol(colData) == 0) return(NULL)
+    
+    ret <- c()
+    for(colcat in colnames(colData)) {
+        if(is(colData[, colcat], "factor")) {
+            ret <- c(ret, colcat)
+        }
+    }
+    return(ret)
 }
