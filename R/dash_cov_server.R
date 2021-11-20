@@ -80,6 +80,22 @@ server_cov <- function(
                 input$end_cov, tracks, 
                 settings_Cov$plot_params, input
             )
+            # if(.server_cov_check_plot_args(settings_Cov$plot_params)) {
+                # obj <- do.call(Plot_Coverage, settings_Cov$plot_params)            
+            
+                # req(obj)
+                # settings_Cov$final_plot <- obj$final_plot
+                # settings_Cov$final_plot$x$source <- "plotly_ViewRef"
+                # output$plot_cov <- renderPlotly({
+                    # settings_Cov$plot_ini <- TRUE      
+                    # print(
+                        # settings_Cov$final_plot
+                    # )
+                # })
+            # }
+        })
+        
+        observeEvent(settings_Cov$plot_params, {
             if(.server_cov_check_plot_args(settings_Cov$plot_params)) {
                 obj <- do.call(Plot_Coverage, settings_Cov$plot_params)            
             
