@@ -80,17 +80,19 @@ server_cov <- function(
                 suppressWarnings(as.numeric(input$end_cov)), tracks, 
                 settings_Cov$plot_params, input
             )
-            obj <- do.call(Plot_Coverage, settings_Cov$plot_params)
+            if(.server_cov_check_plot_args(settings_Cov$plot_params)) {
+                obj <- do.call(Plot_Coverage, settings_Cov$plot_params)            
             
-            req(obj)
-            settings_Cov$final_plot <- obj$final_plot
-            settings_Cov$final_plot$x$source <- "plotly_ViewRef"
-            output$plot_cov <- renderPlotly({
-                settings_Cov$plot_ini <- TRUE      
-                print(
-                    settings_Cov$final_plot
-                )
-            })
+                req(obj)
+                settings_Cov$final_plot <- obj$final_plot
+                settings_Cov$final_plot$x$source <- "plotly_ViewRef"
+                output$plot_cov <- renderPlotly({
+                    settings_Cov$plot_ini <- TRUE      
+                    print(
+                        settings_Cov$final_plot
+                    )
+                })
+            }
         })
         
         observeEvent(input$graph_mode_cov, {
@@ -210,6 +212,7 @@ server_cov_get_all_tracks <- function(input) {
     for(i in seq_len(4)) {
         tracks[[i]] = .server_cov_get_track_selection(input, i)       
     }
+    tracks <- Filter(is_valid, tracks)
     return(tracks)
 }
 
@@ -335,6 +338,37 @@ server_cov_get_all_tracks <- function(input) {
     args <- Filter(is_valid, args)
     
     return(args)
+}
+
+.server_cov_check_plot_args <- function(args) {
+    if(length(args$tracks) == 0) return(FALSE)
+    if(!is_valid(args$condition)) {
+        check <- tryCatch({
+            .plot_cov_validate_args(
+                se = args$se, 
+                tracks = args$tracks, 
+                condition = args$condition,
+                seqname = args$seqname, 
+                start = args$start, 
+                end = args$end
+            )
+            TRUE
+        }, error = function(e) FALSE)
+    } else {
+        check <- tryCatch({
+            .plot_cov_validate_args(
+                se = args$se, 
+                tracks = args$tracks, 
+                # condition = args$condition,
+                seqname = args$seqname, 
+                start = args$start, 
+                end = args$end
+            )
+            TRUE
+        }, error = function(e) FALSE)
+
+    }
+    return(check)
 }
 
 # Change plotly mode (Pan / Zoom / Movable Labels)
@@ -545,4 +579,149 @@ server_cov_get_all_tracks <- function(input) {
         updateSelectizeInput(session = session, inputId = "events_cov", 
             server = TRUE, choices = c("(none)"), selected = "(none)")
     }
+}
+
+################################################################################
+
+# Validate given arguments in Plot_Coverage()
+.plot_cov_validate_args <- function(se, tracks, condition,
+        Event, Gene,
+        seqname, start, end, bases_flanking
+) {
+    .plot_cov_validate_args_se(se, tracks, condition)
+    cov_data <- ref(se)
+    checked <- .plot_cov_validate_args_loci(
+        cov_data, Event, Gene, seqname, start, end)
+    if (!checked) .plot_cov_validate_args_event(se, Event, bases_flanking)
+}
+
+# Check se, tracks, conditions
+.plot_cov_validate_args_se <- function(se, tracks, condition) {
+    if (missing(se) || !is(se, "NxtSE"))
+        .log("In Plot_Coverage, `se` must be a valid `NxtSE` object")
+
+    if (!all(file.exists(covfile(se))))
+        .log(paste("In Plot_Coverage,",
+            "COV files are not defined in se.",
+            "Please supply the correct paths of the COV files",
+            "using covfile(se) <- vector_of_correct_COVfile_paths"))
+
+    # Check condition and tracks
+    if (length(tracks) < 1 | length(tracks) > 4)
+        .log(paste("In Plot_Coverage,", "tracks must be of length 1-4"))
+
+    if (!missing(condition)) {
+        if (length(condition) != 1)
+            .log(paste("In Plot_Coverage,", "condition must be of length 1"))
+
+        if (!(condition %in% names(colData(se))))
+            .log(paste("In Plot_Coverage,",
+                "condition must be a valid column name in colData(se)"))
+
+        condition_options <- unique(colData(se)[, condition])
+        if (!all(tracks %in% condition_options))
+            .log(paste("In Plot_Coverage,",
+                "some tracks do not match valid condition names in",
+                args[["condition"]]))
+
+    } else {
+        if (!all(tracks %in% colnames(se)))
+            .log(paste("In Plot_Coverage,",
+                "some tracks do not match valid sample names in se"))
+    }
+}
+
+# Checks Gene and loci. Only this is run if Plot_Genome is run
+.plot_cov_validate_args_loci <- function(cov_data,
+    Event, Gene, seqname, start, end, bases_flanking = 0
+) {
+    if (!all(c("seqInfo", "gene_list", "elem.DT", "transcripts.DT") %in%
+            names(cov_data)))
+        .log(paste("In Plot_Coverage,",
+            "cov_data must be a valid object",
+            "created by prepare_covplot_data()"))
+
+    # Check we know where to plot
+    if (missing(Event) & missing(Gene) &
+            (missing(seqname) | missing(start) | missing(end))
+    ) {
+        .log(paste("In Plot_Coverage,",
+            "Event or Gene cannot be empty, unless coordinates are provided"))
+    } else if ((is_valid(seqname) & is_valid(start) & is_valid(end))) {
+        view_chr <- as.character(seqname)
+        view_start <- start
+        view_end <- end
+    } else if (is_valid(Gene)) {
+        if (!(Gene %in% cov_data$gene_list$gene_id) &
+                !(Gene %in% cov_data$gene_list$gene_name)) {
+            .log(paste("In Plot_Coverage,",
+                Gene, "is not a valid gene symbol or Ensembl gene id"))
+        }
+        if (!(Gene %in% cov_data$gene_list$gene_id)) {
+            gene.df <- as.data.frame(
+                cov_data$gene_list[get("gene_name") == get("Gene")])
+            if (nrow(gene.df) != 1) {
+                .log(paste("In Plot_Coverage,", Gene,
+                    "is an ambiguous name referring to 2 or more genes.",
+                    "Please provide its gene_id instead"))
+            }
+        } else {
+            gene.df <- as.data.frame(
+                cov_data$gene_list[get("gene_id") == get("Gene")])
+        }
+        view_chr <- as.character(gene.df$seqnames)
+        view_start <- gene.df$start
+        view_end <- gene.df$end
+    } else {
+        return(FALSE)
+    }
+    view_center <- (view_start + view_end) / 2
+    view_length <- view_end - view_start
+    if (!(view_chr %in% names(cov_data$seqInfo)))
+        .log(paste("In Plot_Coverage,", view_chr,
+            "is not a valid chromosome reference name in the given genome"))
+
+    if (is_valid(bases_flanking) &&
+            (!is.numeric(bases_flanking) || bases_flanking < 0))
+        .log(paste("In Plot_Coverage,",
+            "bases_flanking must be a non-negative number"))
+
+    if (!is.numeric(view_length) || view_length < 0)
+        .log(paste("In Plot_Coverage,",
+            "view_length must be a non-negative number"))
+
+    return(TRUE)
+}
+
+# Checks whether Event given is valid.
+.plot_cov_validate_args_event <- function(se, Event, bases_flanking) {
+    cov_data <- ref(se)
+    rowData <- as.data.frame(rowData(se))
+    if (!(Event %in% rownames(rowData))) {
+        .log(paste("In Plot_Coverage,", Event,
+            "is not a valid IR or alternate splicing event in rowData(se)"))
+    }
+    rowData <- rowData[Event, ]
+    view_chr <- tstrsplit(rowData$EventRegion, split = ":")[[1]]
+    temp1 <- tstrsplit(rowData$EventRegion, split = "/")
+    temp2 <- tstrsplit(temp1[[1]], split = ":")[[2]]
+    view_start <- as.numeric(tstrsplit(temp2, split = "-")[[1]])
+    view_end <- as.numeric(tstrsplit(temp2, split = "-")[[2]])
+
+    view_center <- (view_start + view_end) / 2
+    view_length <- view_end - view_start
+    if (!(view_chr %in% names(cov_data$seqInfo)))
+        .log(paste("In Plot_Coverage,", view_chr,
+            "is not a valid chromosome reference name in the given genome"))
+
+    if (is_valid(bases_flanking) &&
+            (!is.numeric(bases_flanking) || bases_flanking < 0))
+        .log(paste("In Plot_Coverage,",
+            "bases_flanking must be a non-negative number"))
+
+    if (!is.numeric(view_length) || view_length < 0)
+        .log(paste("In Plot_Coverage,",
+            "view_length must be a non-negative number"))
+
+    return(TRUE)
 }
