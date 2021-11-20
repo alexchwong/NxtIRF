@@ -12,7 +12,7 @@ server_ref_new <- function(id, refresh_tab, volumes) {
             output$txt_reference_path <- renderText({
                 validate(need(input$dir_reference_path, 
                     "Please select reference path"))
-                settings_newref$newref_path = 
+                settings_newref$newref_path <- 
                     parseDirPath(volumes(), input$dir_reference_path)
             })
         })
@@ -111,37 +111,23 @@ server_ref_new <- function(id, refresh_tab, volumes) {
         observeEvent(input$newref_genome_type, {
             req(input$newref_genome_type)
 
-            if(input$newref_genome_type == "hg38") {
-                settings_newref$newref_NPA = system.file(
-                    "extra-input-files/Human_hg38_nonPolyA_ROI.bed", 
-                    package = "NxtIRF")
-                settings_newref$newref_mappa = 
-                    GetMappabilityRef("hg38")
-            } else if(input$newref_genome_type == "hg19")  {
-                settings_newref$newref_NPA = system.file(
-                    "extra-input-files/Human_hg19_nonPolyA_ROI.bed", 
-                    package = "NxtIRF")
-                settings_newref$newref_mappa = 
-                    GetMappabilityRef("hg19")
-            } else if(input$newref_genome_type == "mm10")  {
-                settings_newref$newref_NPA = system.file(
-                    "extra-input-files/Mouse_mm10_nonPolyA_ROI.bed", 
-                    package = "NxtIRF")
-                settings_newref$newref_mappa = 
-                    GetMappabilityRef("mm10")
-            } else if(input$newref_genome_type == "mm9")  {
-                settings_newref$newref_NPA = system.file(
-                    "extra-input-files/Mouse_mm9_nonPolyA_ROI.bed", 
-                    package = "NxtIRF")
-                settings_newref$newref_mappa = 
-                    GetMappabilityRef("mm9")
-            } else if(input$newref_genome_type == "(custom)") {
-        # do nothing. This allows user to first select the default 
-        #   and then change to user-defined files
-            } else {
-                settings_newref$newref_NPA = ""
-                settings_newref$newref_mappa = ""
-            }
+            gt <- input$newref_genome_type
+            valid_gt_options <- c("hg38", "hg19", "mm10", "mm9")
+            withProgress(message = "Retrieving Mappability resource", value = 0,
+            {
+                if(gt %in% valid_gt_options) {
+                    settings_newref$newref_NPA <- GetNonPolyARef(gt)
+                    settings_newref$newref_mappa <- 
+                        .nxtIRF_get_mappa(gt)
+                } else if(gt == "(custom)") {
+            # do nothing. This allows user to first select the default 
+            #   and then change to user-defined files
+                } else {
+                    settings_newref$newref_NPA <- ""
+                    settings_newref$newref_mappa <- ""
+                }
+            })
+
             settings_newref$ui_newref_genome_type = input$newref_genome_type
         })
 
@@ -228,13 +214,28 @@ server_ref_new <- function(id, refresh_tab, volumes) {
             args <- Filter(is_valid, args)
             if(!("reference_path" %in% names(args))) {
                 output$refStatus = renderText({ "Reference path not set" })
-            } else if(!any(c("fasta_file") %in% names(args))) {
+            } else if(!any(c("fasta") %in% names(args))) {
                 output$refStatus = renderText({ "Genome not provided" })        
-            } else if(!any(c("gtf_file") %in% names(args))) {
+            } else if(!any(c("gtf") %in% names(args))) {
                 output$refStatus = renderText("Gene annotations not provided")
             } else {        
-                # args.df = as.data.frame(t(as.data.frame(args)))
-                # colnames(args.df) = "value"
+                # Copy MappabilityRef into target directory
+                if(
+                        "MappabilityRef" %in% names(args) && 
+                        file.exists(args$MappabilityRef)
+                ) {
+                    mappa_base <- basename(args$MappabilityRef)
+                    new_mappa_path <- file.path(reference_path, "Mappability")
+                    new_mappa_file <- file.path(new_mappa_path, mappa_base)
+                    
+                    dir.create(new_mappa_path)
+                    
+                    if(dir.exists(new_mappa_path))
+                        file.copy(args$MappabilityRef, new_mappa_file)
+                    
+                    if(file.exists(new_mappa_file)) 
+                        args$MappabilityRef <- new_mappa_file
+                }
 
                 withProgress(message = 'Building Reference', value = 0, {
                     do.call(BuildReference, args)
@@ -285,6 +286,17 @@ server_ref_new <- function(id, refresh_tab, volumes) {
                 inputId = "release", 
                 choices = c("")
             )
+        })
+        
+        observeEvent(input$load_ref_example, {
+            output$txt_reference_path <- renderText({
+                settings_newref$newref_path <- tempdir()
+            })
+            settings_newref$newref_fasta <- NxtIRFdata::chrZ_genome()
+            settings_newref$newref_gtf <- NxtIRFdata::chrZ_gtf()
+            
+            output$txt_genome <- renderText(settings_newref$newref_fasta)
+            output$txt_gtf <- renderText(settings_newref$newref_gtf)
         })
         
         return(settings_newref)
@@ -360,4 +372,17 @@ server_ref_new <- function(id, refresh_tab, volumes) {
         !grepl(".chr.", test_gtf)
     ]
     test_gtf
+}
+
+.nxtIRF_get_mappa <- function(genome_type, path = tempdir()) {
+    temp <- ""
+    tryCatch({
+        temp <- get_mappability_exclusion(
+            genome_type, as_type = "bed", path)        
+    })
+    if(file.exists(temp)) {
+        return(temp)
+    } else {
+        return("")
+    }
 }

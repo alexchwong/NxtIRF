@@ -9,7 +9,7 @@ ui_ref_new <- function(id) {
                     label = "Choose reference path", 
                     title = "Choose reference path"
                 )
-            ),
+            ), br(),
             textOutput(ns("txt_reference_path")),
             br(),
             h4("Select Ensembl Reference"),
@@ -29,14 +29,16 @@ ui_ref_new <- function(id) {
                 label = "Choose genome FASTA File", 
                 title = "Choose genome FASTA File", multiple = FALSE)
             ),
-            textOutput(ns("txt_genome")),
+            textOutput(ns("txt_genome")), br(),
             tags$div(title = paste("Choose a user-supplied transcript",
                 "reference gtf file"),
                 shinyFilesButton(ns("file_gtf"), 
                 label = "Choose transcriptome GTF File", 
                 title = "Choose transcriptome GTF File", multiple = FALSE)
             ),
-            textOutput(ns("txt_gtf"))
+            textOutput(ns("txt_gtf")),
+            br(),
+            actionButton(ns("load_ref_example"), "Load Example FASTA / GTF")
         ),
         column(5,
             tags$div(title = paste("NxtIRF will auto-populate default",
@@ -53,10 +55,11 @@ ui_ref_new <- function(id) {
                 shinyFilesButton(ns("file_mappa"), 
                     label = "Choose Mappability Exclusion file", 
                     title = "Choose Mappability Exclusion file", 
-                    multiple = FALSE)
-            ),
-            textOutput(ns("txt_mappa")), 
-            actionButton(ns("clear_mappa"), "Clear"),
+                    multiple = FALSE),
+                actionButton(ns("clear_mappa"), "Clear")
+            ), 
+            textOutput(ns("txt_mappa")), br(),
+            
             tags$div(title = paste("Select Non-PolyA reference file.",
                     "This is used by IRFinder",
                     "to calculate reads from known non-polyadenylated",
@@ -64,21 +67,23 @@ ui_ref_new <- function(id) {
                     "quality of poly-A enrichment in sample QC"),
                 shinyFilesButton(ns("file_NPA"), 
                     label = "Choose non-PolyA BED file", 
-                    title = "Choose non-PolyA BED file", multiple = FALSE)
-            ),
-            textOutput(ns("txt_NPA")), actionButton(ns("clear_NPA"), "Clear"),
+                    title = "Choose non-PolyA BED file", multiple = FALSE),
+                actionButton(ns("clear_NPA"), "Clear")
+            ), 
+            textOutput(ns("txt_NPA")), br(),
             tags$div(title = paste("Select Blacklist file.",
                     "This is typically a 3 columns",
                     "of values containing seqnames, start and end coordinates",
                     "of regions to exclude from IRFinder analysis"),
                 shinyFilesButton(ns("file_bl"), 
                     label = "Choose blacklist BED file", 
-                    title = "Choose blacklist BED file", multiple = FALSE)
-            ),
-            textOutput(ns("txt_bl")), actionButton(ns("clear_bl"), "Clear"),
-            br(),
+                    title = "Choose blacklist BED file", multiple = FALSE),
+                actionButton(ns("clear_bl"), "Clear")
+            ), 
+            textOutput(ns("txt_bl")), br(), br(),
             actionButton(ns("buildRef"), "Build Reference"),
             actionButton(ns("clearNewRef"), "Clear settings"),
+            br(),
             uiOutput(ns("refStatus"))
         )
     )
