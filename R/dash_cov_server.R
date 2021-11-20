@@ -332,7 +332,8 @@ server_cov_get_all_tracks <- function(input) {
 
         # graph_mode = input$graph_mode_cov,
     )
-
+    args <- Filter(is_valid, args)
+    
     return(args)
 }
 
