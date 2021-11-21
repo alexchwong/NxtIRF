@@ -54,11 +54,12 @@ server_cov <- function(
             settings_Cov$trigger
         })
         
-        chr_rd <- chr_r %>% debounce(1000)
+        chr_rd <- chr_r # %>% debounce(1000)
         start_rd <- start_r %>% debounce(1000)
         end_rd <- end_r %>% debounce(1000)
-        tracks_rd <- tracks_r %>% debounce(3000)
-        trigger_rd <- trigger_r %>% debounce(1000)
+        
+        tracks_rd <- tracks_r %>% debounce(3000)    # 3 sec delay for tracks
+        trigger_rd <- trigger_r # %>% debounce(1000)
     
         observeEvent(list(chr_rd(), start_rd(), end_rd()), {
             .server_cov_update_norm_event(
@@ -80,19 +81,6 @@ server_cov <- function(
                 input$end_cov, tracks, 
                 settings_Cov$plot_params, input
             )
-            # if(.server_cov_check_plot_args(settings_Cov$plot_params)) {
-                # obj <- do.call(Plot_Coverage, settings_Cov$plot_params)            
-            
-                # req(obj)
-                # settings_Cov$final_plot <- obj$final_plot
-                # settings_Cov$final_plot$x$source <- "plotly_ViewRef"
-                # output$plot_cov <- renderPlotly({
-                    # settings_Cov$plot_ini <- TRUE      
-                    # print(
-                        # settings_Cov$final_plot
-                    # )
-                # })
-            # }
         })
         
         observeEvent(settings_Cov$plot_params, {
@@ -103,12 +91,25 @@ server_cov <- function(
                 settings_Cov$final_plot <- obj$final_plot
                 settings_Cov$final_plot$x$source <- "plotly_ViewRef"
                 output$plot_cov <- renderPlotly({
-                    settings_Cov$plot_ini <- TRUE      
-                    print(
-                        settings_Cov$final_plot
-                    )
+                    settings_Cov$plot_ini <- TRUE
+                    if(input$graph_mode_cov == "Pan") {
+                        print(
+                            settings_Cov$final_plot %>%
+                                layout(dragmode = "pan")
+                        )                    
+                    } else if(input$graph_mode_cov == "Zoom") {
+                        print(
+                            settings_Cov$final_plot %>%
+                                layout(dragmode = "zoom")
+                        )  
+                    } else if(input$graph_mode_cov == "Movable Labels") {
+                        print(
+                            settings_Cov$final_plot %>%
+                                layout(dragmode = FALSE) %>%
+                                config(editable = TRUE)
+                        )  
+                    }
                 })
-                .server_cov_plot_change_mode(session, input$graph_mode_cov)
             }
         })
         
@@ -126,25 +127,51 @@ server_cov <- function(
             .server_cov_refresh_tracks_cov(session, input$mode_cov, 
                 input$condition_cov, get_se())
         })
+        
+        # When user pans or zooms the plot, what happens
         settings_Cov$plotly_relayout = reactive({
             req(settings_Cov$plot_ini == TRUE)
             event_data("plotly_relayout", source = "plotly_ViewRef")
         })
         observeEvent(settings_Cov$plotly_relayout(), {
-            print(settings_Cov$plotly_relayout())
+            # print(settings_Cov$plotly_relayout())
             req(length(settings_Cov$plotly_relayout()) == 2)
             req(all(c("xaxis.range[0]", "xaxis.range[1]") %in% 
                 names(settings_Cov$plotly_relayout())))
-                
-            updateTextInput(
-                session = session, inputId = "start_cov", 
-                value = max(1, 
-                    round(settings_Cov$plotly_relayout()[["xaxis.range[0]"]]))
-                )
+            
+            new_start <- max(1, 
+                round(settings_Cov$plotly_relayout()[["xaxis.range[0]"]]))
+            new_end <- round(
+                settings_Cov$plotly_relayout()[["xaxis.range[1]"]])
+            
+            # Enforce chromosome boundary
+            seqInfo <- get_ref()$seqInfo[input$chr_cov]
+            seqmax  <- as.numeric(GenomeInfoDb::seqlengths(seqInfo))
+            if(new_end > seqmax) {
+                new_end <- seqmax
+                if(new_end - new_start < 50) {
+                    new_start <- new_end - 50
+                }
+            }
+            # Enforce min width > 50
+            if(new_end - new_start < 50) {
+                if(new_end >= 50) {
+                    new_start <- new_end - 50
+                } else {
+                    new_end <- new_start + 50
+                }
+            }
+            
+            # Directly input into args for quick refresh:
+            settings_Cov$plot_params$start <- new_start
+            settings_Cov$plot_params$start <- new_end
+            
+            updateTextInput(session = session, inputId = "start_cov", 
+                value = new_start)
             updateTextInput(session = session, inputId = "end_cov", 
-                value = round(
-                    settings_Cov$plotly_relayout()[["xaxis.range[1]"]]))
+                value = new_end)
         })
+        
         observeEvent(input$zoom_out_cov, {
             req(input$zoom_out_cov, input$chr_cov) 
             req(input$chr_cov %in% names(get_ref()$seqInfo))
