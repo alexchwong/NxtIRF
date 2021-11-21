@@ -134,7 +134,8 @@ server_cov <- function(
             event_data("plotly_relayout", source = "plotly_ViewRef")
         })
         observeEvent(settings_Cov$plotly_relayout(), {
-            # print(settings_Cov$plotly_relayout())
+            print(settings_Cov$plotly_relayout())
+            req(FALSE)
             req(length(settings_Cov$plotly_relayout()) == 2)
             req(all(c("xaxis.range[0]", "xaxis.range[1]") %in% 
                 names(settings_Cov$plotly_relayout())))
