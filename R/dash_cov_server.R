@@ -135,7 +135,7 @@ server_cov <- function(
         })
         observeEvent(settings_Cov$plotly_relayout(), {
             print(settings_Cov$plotly_relayout())
-            req(FALSE)
+            # req(FALSE)
             req(length(settings_Cov$plotly_relayout()) == 2)
             req(all(c("xaxis.range[0]", "xaxis.range[1]") %in% 
                 names(settings_Cov$plotly_relayout())))
@@ -165,7 +165,7 @@ server_cov <- function(
             
             # Directly input into args for quick refresh:
             settings_Cov$plot_params$start <- new_start
-            settings_Cov$plot_params$start <- new_end
+            settings_Cov$plot_params$end <- new_end
             
             updateTextInput(session = session, inputId = "start_cov", 
                 value = new_start)
