@@ -11,11 +11,6 @@ ui_expr <- function(id) {
         fluidRow(
             column(4,
                 wellPanel(
-                    ui_ddb_project_dir(id), br(),br(),
-                    ui_ddb_ref_load(id), br(),br(),
-                    ui_ddb_bam_path(id), br(),br(),
-                    ui_ddb_irf_path(id), br(),br(),
-                    ui_ddb_build_expr(id), br(),br(),
                     conditionalPanel(
                         ns = ns,
                         condition = paste(
@@ -39,6 +34,11 @@ ui_expr <- function(id) {
                             )                                
                         )
                     ),
+                    ui_ddb_project_dir(id, color = "default"), br(), # br(),
+                    ui_ddb_ref_load(id, color = "default"), br(), # br(),
+                    ui_ddb_bam_path(id, color = "default"), br(), # br(),
+                    ui_ddb_irf_path(id, color = "default"), br(), # br(),
+                    ui_ddb_build_expr(id, color = "default"), # br(), # br(),
                 )
             ),
             column(8,
@@ -87,9 +87,6 @@ ui_expr_limited <- function(id) {
     ns <- NS(id)
     wellPanel(
         fluidRow(
-            # uiOutput(ns("ref_expr_infobox")),
-            # uiOutput(ns("bam_expr_infobox")),
-            # uiOutput(ns("irf_expr_infobox")),
             uiOutput(ns("se_expr_infobox"))
         ),
         fluidRow(
@@ -118,9 +115,6 @@ ui_expr_limited <- function(id) {
                             )                                
                         )
                     ),
-                    # ui_ddb_ref_load(id),
-                    # ui_ddb_bam_path(id),
-                    # ui_ddb_irf_path(id),
                     ui_ddb_load_expr(id),
                 )
             ),
@@ -199,7 +193,7 @@ ui_ddb_bam_path <- function(id, color = "danger") {
         color = color,
         icon = icon("folder-open", lib = "font-awesome"),
         
-        tags$h4("Select Directory containing BAM files"),
+        tags$h4("Search Directory for BAM files"),
         shinyDirButton(ns("dir_bam_path_load"), 
             label = "Select BAM path", 
             title = "Select BAM path"),
@@ -215,14 +209,14 @@ ui_ddb_irf_path <- function(id, color = "danger") {
         color = color,
         icon = icon("align-center", lib = "font-awesome"),
         
-        tags$h4("Choose Directory to contain IRFinder output"),       
+        tags$h4("Choose IRFinder Output Directory"),       
         shinyDirButton(ns("dir_irf_path_load"), 
-            label = "Choose IRFinder output path", 
-            title = "Choose IRFinder output path"), # done
+            label = "Choose IRFinder Output Directory", 
+            title = "Choose IRFinder Output Directory"),
         textOutput(ns("txt_irf_path_expr")), br(),
         tags$h4("Run IRFinder on Selected BAMs"),
         actionButton(ns("run_irf_expr"), 
-            "Run IRFinder"), # TODO
+            "Run IRFinder"),
         textOutput(ns("txt_run_irf_expr"))        
     )      
 }
@@ -237,7 +231,7 @@ ui_ddb_build_expr <- function(id, color = "danger") {
         icon = icon("flask", lib = "font-awesome"),
 
 
-        tags$h4("Collate IRFinder data / Create NxtSE Object"),
+        tags$h4("Collate Experiment"),
         actionButton(ns("run_collate_expr"), 
             "Run CollateData()"),
         br(),br(),

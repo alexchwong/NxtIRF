@@ -370,11 +370,11 @@ server_expr <- function(
 
 # Clear all info boxes
 .server_expr_clear_ref <- function(output) {
-    output$fasta_source_infobox <- renderInfoBox(infoBox(""))
-    output$gtf_source_infobox <- renderInfoBox(infoBox(""))
-    output$mappa_source_infobox <- renderInfoBox(infoBox(""))
-    output$NPA_source_infobox <- renderInfoBox(infoBox(""))
-    output$BL_source_infobox <- renderInfoBox(infoBox(""))
+    # output$fasta_source_infobox <- renderInfoBox(infoBox(""))
+    # output$gtf_source_infobox <- renderInfoBox(infoBox(""))
+    # output$mappa_source_infobox <- renderInfoBox(infoBox(""))
+    # output$NPA_source_infobox <- renderInfoBox(infoBox(""))
+    # output$BL_source_infobox <- renderInfoBox(infoBox(""))
     output$txt_reference_path_load <- renderText("")
     output$ref_expr_infobox <- renderUI(ui_infobox_ref(""))
     return(output)

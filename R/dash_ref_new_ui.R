@@ -52,10 +52,6 @@ ui_ref_new <- function(id) {
                         textOutput(ns("txt_gtf"))
                     )
                 )
-            ),
-            shinyWidgets::actionBttn(ns("load_ref_example"), 
-                "Load Example FASTA / GTF",
-                style = "gradient", color = "danger"
             )
         ),
         column(6,
@@ -114,10 +110,16 @@ ui_ref_new <- function(id) {
             ),
             wellPanel(
                 tags$div(
-                    shinyWidgets::actionBttn(ns("buildRef"), "Build Reference", 
+                    shinyWidgets::actionBttn(ns("buildRef"), 
+                        "Build Reference", 
                         style = "gradient", color = "primary"),
-                    shinyWidgets::actionBttn(ns("clearNewRef"), "Clear settings",
-                        style = "gradient", color = "warning")
+                    shinyWidgets::actionBttn(ns("clearNewRef"), 
+                        "Clear settings", 
+                        style = "gradient", color = "warning"),
+                    shinyWidgets::actionBttn(ns("load_ref_example"), 
+                        "Load Example FASTA / GTF",
+                        style = "gradient", color = "danger"
+                    )
                 )
             ),
             uiOutput(ns("refStatus"))
