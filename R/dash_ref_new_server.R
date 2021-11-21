@@ -139,8 +139,9 @@ server_ref_new <- function(id, refresh_tab, volumes) {
             )
         }, {
             req(refresh_tab())
+            msg <- 'Fetching from Ensembl FTP'
             if(is_valid(input$release) & is_valid(input$species)) {
-                withProgress(message = 'Getting options', value = 0, {
+                withProgress(message = msg, value = 0, {
                     updateSelectInput(session = session, 
                         inputId = "fasta", 
                         choices = c("", .refresh_genome(
@@ -155,7 +156,7 @@ server_ref_new <- function(id, refresh_tab, volumes) {
                     )
                 })
             } else if(is_valid(input$release)) {
-                withProgress(message = 'Getting options', value = 0, {
+                withProgress(message = msg, value = 0, {
                     updateSelectInput(session = session, 
                         inputId = "species", 
                         choices = c("", .refresh_species(
@@ -164,7 +165,7 @@ server_ref_new <- function(id, refresh_tab, volumes) {
                     )
                 })            
             } else {
-                withProgress(message = 'Getting options', value = 0, {
+                withProgress(message = msg, value = 0, {
                     updateSelectInput(session = session, 
                         inputId = "release", 
                         choices = c("", .refresh_releases())
@@ -225,7 +226,8 @@ server_ref_new <- function(id, refresh_tab, volumes) {
                         file.exists(args$MappabilityRef)
                 ) {
                     mappa_base <- basename(args$MappabilityRef)
-                    new_mappa_path <- file.path(args$reference_path, "Mappability")
+                    new_mappa_path <- file.path(args$reference_path, 
+                        "Mappability")
                     new_mappa_file <- file.path(new_mappa_path, mappa_base)
                     
                     dir.create(new_mappa_path)

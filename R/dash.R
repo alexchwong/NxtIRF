@@ -34,7 +34,7 @@ nxtIRF <- function(mode = c("dialog", "browser"),
             tabItems(
                 ui_tab_title(),     # "navTitle"
                 
-                ui_tab_system(),    # "navSystem"
+                # ui_tab_system(),    # "navSystem"
                 
                 ui_tab_ref_new(),   # "navRef_New"    
 

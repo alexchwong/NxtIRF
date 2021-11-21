@@ -2,7 +2,7 @@ ui_sidebar <- function() {
     dashboardSidebar(
         sidebarMenu(id = "navSelection",
             menuItem("About", tabName = "navTitle"),
-            menuItem("System", tabName = "navSystem"),
+            # menuItem("System", tabName = "navSystem"),
             menuItem("Build Reference", tabName = "navRef_New"),
             menuItem("Run IRFinder / Collate Experiment", tabName = "navExpr"),
             menuItem("Perform Analysis",
@@ -24,6 +24,31 @@ ui_sidebar <- function() {
 
 ui_tab_title <- function() {
     tabItem(tabName = "navTitle",
+        box(
+            tags$div(title = paste(
+                "Number of threads to run",
+                "computationally-intensive operations",
+                "such as IRFinder, NxtIRF-collate, and DESeq2"),
+                radioGroupButtons(
+                    inputId = "thread_option",
+                    label = "Mode",
+                    choices = c( 
+                        "Multi-Thread (High)",
+                        "Multi-Thread (Low)", 
+                        "Single-Thread", "Custom"
+                    ),
+                    justified = TRUE,
+                    checkIcon = list(
+                        yes = icon("ok", lib = "glyphicon")
+                    )
+                ),
+                conditionalPanel(
+                    condition = "['Custom'].indexOf(input.thread_option) >= 0",
+                    numericInput("cores_numeric", "# Threads", min = 1, 
+                        max = parallel::detectCores(), value = 1)
+                )                
+            )
+        ), br(),
         img(src=paste0(
             "https://pbs.twimg.com/",
             "profile_images/",

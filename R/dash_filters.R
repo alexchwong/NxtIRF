@@ -10,7 +10,7 @@ ui_filters <- function(id) {
                     filterModule_UI(ns("filter3"), "Filter #3"),
                     filterModule_UI(ns("filter4"), "Filter #4"),
                     filterModule_UI(ns("filter5"), "Filter #5"),
-                    filterModule_UI(ns("filter6"), "Filter #6")                    
+                    filterModule_UI(ns("filter6"), "Filter #6")
                 )
             ),
             column(4,

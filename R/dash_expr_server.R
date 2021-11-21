@@ -782,69 +782,31 @@ Expr_IRF_initiate_run <- function(input, session, n_threads, settings_expr) {
 
 # After user confirms, actually call IRFinder
 Expr_IRF_actually_run <- function(input, session, n_threads, settings_expr) {
-    # n_threads   <- min(n_threads, length(settings_expr$selected_rows))
-    # n_rounds    <- ceiling(length(settings_expr$selected_rows) / n_threads)
-    # n_threads   <- ceiling(length(settings_expr$selected_rows) / n_rounds)
-    # if(n_threads == 1) {
-        # run IRFinder using single thread
-        withProgress(message = 'Running IRFinder', value = 0, {
-            i_done <- 0
-            incProgress(0.001, 
-                message = paste('Running IRFinder',
-                    i_done, "of", length(settings_expr$selected_rows), "done")
+
+    withProgress(message = 'Running IRFinder', value = 0, {
+        i_done <- 0
+        incProgress(0.001, 
+            message = paste('Running IRFinder',
+                i_done, "of", length(settings_expr$selected_rows), "done")
+        )
+        for(i in settings_expr$selected_rows) {
+            IRFinder(
+                bamfiles = settings_expr$df.files$bam_file[i],
+                sample_names = settings_expr$df.files$sample[i],
+                reference_path = settings_expr$ref_path,
+                output_path = settings_expr$irf_path,
+                n_threads = n_threads,
+                run_featureCounts = FALSE,
+                verbose = TRUE                    
             )
-            for(i in settings_expr$selected_rows) {
-                IRFinder(
-                    bamfiles = settings_expr$df.files$bam_file[i],
-                    sample_names = settings_expr$df.files$sample[i],
-                    reference_path = settings_expr$ref_path,
-                    output_path = settings_expr$irf_path,
-                    n_threads = n_threads,
-                    run_featureCounts = FALSE,
-                    verbose = TRUE                    
-                )
-                i_done <- i_done + 1
-                incProgress(1 / length(settings_expr$selected_rows), 
-                    message = paste(i_done, "of", 
-                        length(settings_expr$selected_rows), "done")
-                )
-            }
-        })
-    # } else if(n_threads <= length(settings_expr$selected_rows)) {
-        # extract subset to run in parallel
-        # row_starts <- seq(settings_expr$selected_rows[1], by = n_threads,
-            # length.out = n_rounds)
-        # withProgress(message = 'Running IRFinder - Multi-threaded', value = 0, {
-            # i_done <- 0
-            # incProgress(0.001, 
-                # message = paste('Running IRFinder - Multi-threaded,',
-                    # i_done, "of", length(settings_expr$selected_rows), "done")
-            # )
-            # for(i in seq_len(n_rounds)) {
-                # selected_rows_subset <- seq(
-                    # row_starts[i], 
-                    # min(length(settings_expr$selected_rows), 
-                        # row_starts[i] + n_threads - 1)
-                # )
-                # IRFinder(
-                    # bamfiles = settings_expr$df.files$
-                        # bam_file[selected_rows_subset],
-                    # sample_names = settings_expr$df.files$
-                        # sample[selected_rows_subset],
-                    # reference_path = settings_expr$ref_path,
-                    # output_path = settings_expr$irf_path,
-                    # n_threads = n_threads,
-                    # run_featureCounts = FALSE,
-                    # verbose = TRUE
-                # )                        
-                # i_done <- i_done + n_threads
-                # incProgress(n_threads / length(settings_expr$selected_rows), 
-                    # message = paste(i_done, "of", 
-                        # length(settings_expr$selected_rows), "done")
-                # )
-            # }
-        # })
-    # }
+            i_done <- i_done + 1
+            incProgress(1 / length(settings_expr$selected_rows), 
+                message = paste(i_done, "of", 
+                    length(settings_expr$selected_rows), "done")
+            )
+        }
+    })
+
     sendSweetAlert(
         session = session,
         title = "IRFinder run completed",
