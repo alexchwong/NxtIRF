@@ -210,7 +210,7 @@ server_cov <- function(
             seqmax <- as.numeric(GenomeInfoDb::seqlengths(seqInfo))
             req(seqmax > 50)
             .server_cov_change_start_end(input, session, output, seqmax)
-            settings_Cov$trigger <- runif(1)
+            # settings_Cov$trigger <- runif(1)
         })
         observeEvent(list(start_rd(), end_rd()), {
             req(input$chr_cov, input$chr_cov %in% names(get_ref()$seqInfo))
@@ -219,7 +219,7 @@ server_cov <- function(
             req(seqmax > 50)
             output <- .server_cov_change_start_end(
                 input, session, output, seqmax)
-            settings_Cov$trigger <- runif(1)
+            # settings_Cov$trigger <- runif(1)
         })
         
         # Populate events
@@ -578,8 +578,10 @@ server_cov_get_all_tracks <- function(input) {
     cur_zoom = floor(log(span/50) / log(3))
     
     output$label_zoom_cov <- renderText({16 - cur_zoom})
-    updateTextInput(session = session, inputId = "end_cov", 
-        value = target_end)
+    if(target_end != input$end_cov)
+        updateTextInput(session = session, inputId = "end_cov", 
+            value = target_end)
+    if(target_start != input$start_cov)
     updateTextInput(session = session, inputId = "start_cov", 
         value = target_start)
     return(output)
