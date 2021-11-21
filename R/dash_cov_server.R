@@ -85,31 +85,33 @@ server_cov <- function(
         
         observeEvent(settings_Cov$plot_params, {
             if(.server_cov_check_plot_args(settings_Cov$plot_params)) {
-                obj <- do.call(Plot_Coverage, settings_Cov$plot_params)            
-            
-                req(obj)
-                settings_Cov$final_plot <- obj$final_plot
-                settings_Cov$final_plot$x$source <- "plotly_ViewRef"
-                output$plot_cov <- renderPlotly({
-                    settings_Cov$plot_ini <- TRUE
-                    if(input$graph_mode_cov == "Pan") {
-                        print(
-                            settings_Cov$final_plot %>%
-                                layout(dragmode = "pan")
-                        )                    
-                    } else if(input$graph_mode_cov == "Zoom") {
-                        print(
-                            settings_Cov$final_plot %>%
-                                layout(dragmode = "zoom")
-                        )  
-                    } else if(input$graph_mode_cov == "Movable Labels") {
-                        print(
-                            settings_Cov$final_plot %>%
-                                layout(dragmode = FALSE) %>%
-                                config(editable = TRUE)
-                        )  
-                    }
-                })
+                withProgress(message = 'Refreshing Plotly...', value = 0, {
+                    obj <- do.call(Plot_Coverage, settings_Cov$plot_params)            
+                
+                    req(obj)
+                    settings_Cov$final_plot <- obj$final_plot
+                    settings_Cov$final_plot$x$source <- "plotly_ViewRef"
+                    output$plot_cov <- renderPlotly({
+                        settings_Cov$plot_ini <- TRUE
+                        if(input$graph_mode_cov == "Pan") {
+                            print(
+                                settings_Cov$final_plot %>%
+                                    layout(dragmode = "pan")
+                            )                    
+                        } else if(input$graph_mode_cov == "Zoom") {
+                            print(
+                                settings_Cov$final_plot %>%
+                                    layout(dragmode = "zoom")
+                            )  
+                        } else if(input$graph_mode_cov == "Movable Labels") {
+                            print(
+                                settings_Cov$final_plot %>%
+                                    layout(dragmode = FALSE) %>%
+                                    config(editable = TRUE)
+                            )  
+                        }
+                    })
+                }
             }
         })
         
@@ -178,12 +180,13 @@ server_cov <- function(
             req(input$chr_cov %in% names(get_ref()$seqInfo))
             
             seqInfo <- get_ref()$seqInfo[input$chr_cov]
-            .server_cov_zoom_out(input, session, seqInfo)
+            output <- .server_cov_zoom_out(
+                input, output, session, seqInfo, settings_Cov)
         })
         observeEvent(input$zoom_in_cov, {
             req(input$zoom_in_cov)
             
-            .server_cov_zoom_in(input, session)
+            output <- .server_cov_zoom_in(input, output, session, settings_Cov)
         })
         observeEvent(input$events_cov, {
             req(input$events_cov)
@@ -475,7 +478,9 @@ server_cov_get_all_tracks <- function(input) {
 }
 
 # Zoom out
-.server_cov_zoom_out <- function(input, session, seqInfo) {
+.server_cov_zoom_out <- function(
+        input, output, session, seqInfo, settings_Cov
+) {
     view_start  <- input$start_cov
     view_end    <- input$end_cov
     req(view_start, view_end, view_end - view_start >= 50)
@@ -491,14 +496,20 @@ server_cov_get_all_tracks <- function(input) {
     # if(new_span > seqmax - 1) new_span = seqmax - 1
     new_start <- max(1, center - round(new_span / 2))
     
+    settings_Cov$plot_params$start <- new_start
+    settings_Cov$plot_params$end <- new_start + new_span
+    cur_zoom = floor(log(new_span/50) / log(3))
+    output$label_zoom_cov <- renderText({16 - cur_zoom})
+    
     updateTextInput(session = session, inputId = "start_cov", 
         value = new_start)
     updateTextInput(session = session, inputId = "end_cov", 
         value = new_start + new_span)
+    return(output)
 }
 
 # Zoom in
-.server_cov_zoom_in <- function(input, session) {
+.server_cov_zoom_in <- function(input, output, session, settings_Cov) {
     view_start  <- input$start_cov
     view_end    <- input$end_cov
     req(view_start, view_end, view_end - view_start >= 50)
@@ -514,10 +525,16 @@ server_cov_get_all_tracks <- function(input) {
     new_zoom <- floor(log(new_span / 50) / log(3))
     new_start <- max(1, center - round(new_span / 2))
 
+    settings_Cov$plot_params$start <- new_start
+    settings_Cov$plot_params$end <- new_start + new_span
+    cur_zoom = floor(log(new_span/50) / log(3))
+    output$label_zoom_cov <- renderText({16 - cur_zoom})
+    
     updateTextInput(session = session, inputId = "start_cov", 
         value = new_start)
     updateTextInput(session = session, inputId = "end_cov", 
         value = new_start + new_span)
+    return(output)
 }
 
 # Sets start and end given an Event
