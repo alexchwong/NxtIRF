@@ -353,8 +353,8 @@ server_ref_new <- function(id, refresh_tab, volumes) {
         species, "/dna/"           
     ))
     test_genome = test_genome[
-        grepl("toplevel", test_genome) |
-        grepl("primary", test_genome)
+        grepl("toplevel", test_genome, fixed = TRUE) |
+        grepl("primary", test_genome, fixed = TRUE)
     ]
     test_genome
 }
@@ -368,10 +368,10 @@ server_ref_new <- function(id, refresh_tab, volumes) {
         species        
     ))
     test_gtf = test_gtf[
-        grepl("gtf.gz", test_gtf) &
-        !grepl("abinitio", test_gtf) &
-        !grepl("scaff", test_gtf) &
-        !grepl(".chr.", test_gtf)
+        grepl("gtf.gz", test_gtf, fixed = TRUE) &
+        !grepl("abinitio", test_gtf, fixed = TRUE) &
+        !grepl("scaff", test_gtf, fixed = TRUE) &
+        !grepl(".chr.", test_gtf, fixed = TRUE)
     ]
     test_gtf
 }

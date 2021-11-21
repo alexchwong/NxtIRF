@@ -4,14 +4,16 @@ ui_ref_new <- function(id) {
         .ui_notice(),
         column(6,
             # h4("Select Reference Directory"),
-            tags$div(title = paste("Specify (or create) a directory for NxtIRF",
-                    "to create its IRFinder/NxtIRF reference"),
-                wellPanel(
-                    shinyDirButton(ns("dir_reference_path"), 
-                        label = "Select Reference Directory", 
-                        title = "Select Reference Directory",
-                        buttonType = "primary"
-                    ), textOutput(ns("txt_reference_path"))
+            wellPanel(
+                tags$div(title = paste("Choose a directory for NxtIRF",
+                        "to create its IRFinder/NxtIRF reference"),
+                    splitLayout(cellWidths = c("30%", "70%"), 
+                        shinyDirButton(ns("dir_reference_path"), 
+                            label = "Select Reference Directory", 
+                            title = "Select Reference Directory",
+                            buttonType = "primary"
+                        ), textOutput(ns("txt_reference_path"))
+                    )
                 )
             ), br(),
             wellPanel(
@@ -27,25 +29,34 @@ ui_ref_new <- function(id) {
             ),
             wellPanel(
                 h4("or select Reference from File"),
-                tags$div(title = paste("Choose a user-supplied genome fasta file"),
-                    shinyFilesButton(ns("file_genome"), 
-                    label = "Choose genome FASTA File", 
-                    title = "Choose genome FASTA File", 
-                    buttonType = "primary",
-                    multiple = FALSE)
-                ),
-                textOutput(ns("txt_genome")), br(),
+                tags$div(title = "Choose a user-supplied genome fasta file",
+                    splitLayout(cellWidths = c("35%", "65%"), 
+                        shinyFilesButton(ns("file_genome"), 
+                            label = "Choose genome FASTA File", 
+                            title = "Choose genome FASTA File", 
+                            buttonType = "primary",
+                            multiple = FALSE
+                        ),
+                        textOutput(ns("txt_genome"))
+                    )
+                ), br(),
                 tags$div(title = paste("Choose a user-supplied transcript",
                     "reference gtf file"),
-                    shinyFilesButton(ns("file_gtf"), 
-                    label = "Choose transcriptome GTF File", 
-                    title = "Choose transcriptome GTF File", 
-                    buttonType = "primary",
-                    multiple = FALSE)
-                ),
-                textOutput(ns("txt_gtf")),
+                    splitLayout(cellWidths = c("35%", "65%"), 
+                        shinyFilesButton(ns("file_gtf"), 
+                            label = "Choose transcriptome GTF File", 
+                            title = "Choose transcriptome GTF File", 
+                            buttonType = "primary",
+                            multiple = FALSE
+                        ),
+                        textOutput(ns("txt_gtf"))
+                    )
+                )
             ),
-            actionButton(ns("load_ref_example"), "Load Example FASTA / GTF")
+            shinyWidgets::actionBttn(ns("load_ref_example"), 
+                "Load Example FASTA / GTF",
+                style = "gradient", color = "danger"
+            )
         ),
         column(6,
             wellPanel(
@@ -53,8 +64,10 @@ ui_ref_new <- function(id) {
                         "mappability and non-polyA reference files for",
                         "hg38, hg19, mm10 and mm9 genomes"),
                     selectInput(ns('newref_genome_type'),
-                        'Select Genome Type to set Mappability and non-PolyA files',
-                        c("(custom)", "hg38", "mm10", "hg19", "mm9"))
+                        paste('Select Genome Type to set',
+                            'Mappability and non-PolyA files'),
+                        c("(custom)", "hg38", "mm10", "hg19", "mm9")
+                    )
                 ),
                 tags$div(title = paste("Select Mappability Exclusion file.",
                         "This is typically a 3 columns",
@@ -63,12 +76,13 @@ ui_ref_new <- function(id) {
                     shinyFilesButton(ns("file_mappa"), 
                         label = "Choose Mappability Exclusion file", 
                         title = "Choose Mappability Exclusion file", 
-                        buttonType = "success",
-                        multiple = FALSE),
+                        buttonType = "primary",
+                        multiple = FALSE
+                    ),
                     actionButton(ns("clear_mappa"), "Clear",
-                        class = "btn-outline-danger")
-                ), 
-                textOutput(ns("txt_mappa")), br(),
+                        class = "btn-outline-danger"),
+                    textOutput(ns("txt_mappa"))
+                ), br(),
             
                 tags$div(title = paste("Select Non-PolyA reference file.",
                         "This is used by IRFinder",
@@ -78,32 +92,34 @@ ui_ref_new <- function(id) {
                     shinyFilesButton(ns("file_NPA"), 
                         label = "Choose non-PolyA BED file", 
                         title = "Choose non-PolyA BED file", 
-                        buttonType = "success",
+                        buttonType = "primary",
                         multiple = FALSE),
                     actionButton(ns("clear_NPA"), "Clear",
-                        class = "btn-outline-danger")
-                ), 
-                textOutput(ns("txt_NPA")), br(),
-                
+                        class = "btn-outline-danger"),
+                    textOutput(ns("txt_NPA"))
+                ), br(),
                 tags$div(title = paste("Select Blacklist file.",
-                        "This is typically a 3 columns",
-                        "of values containing seqnames, start and end coordinates",
+                        "This is typically a 3 columns of values",
+                        "containing seqnames, start and end coordinates",
                         "of regions to exclude from IRFinder analysis"),
                     shinyFilesButton(ns("file_bl"), 
                         label = "Choose blacklist BED file", 
                         title = "Choose blacklist BED file", 
-                        buttonType = "success",
+                        buttonType = "primary",
                         multiple = FALSE),
                     actionButton(ns("clear_bl"), "Clear",
-                        class = "btn-outline-danger")
-                ), 
-                textOutput(ns("txt_bl"))
+                        class = "btn-outline-danger"),
+                    textOutput(ns("txt_bl"))
+                )
             ),
-            actionButton(ns("buildRef"), "Build Reference", 
-                class = "btn-success"),
-            actionButton(ns("clearNewRef"), "Clear settings",
-                class = "btn-outline-danger"),
-            br(),
+            wellPanel(
+                tags$div(
+                    shinyWidgets::actionBttn(ns("buildRef"), "Build Reference", 
+                        style = "gradient", color = "primary"),
+                    shinyWidgets::actionBttn(ns("clearNewRef"), "Clear settings",
+                        style = "gradient", color = "warning")
+                )
+            ),
             uiOutput(ns("refStatus"))
         )
     )
